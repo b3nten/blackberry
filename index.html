@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Blackberry.js - for the artisinal web</title>
+	<style>blackberry-component { display: none; }</style>
+	<script type="module">
+		import Alpine from "https://esm.sh/v135/alpinejs@3.14.7/es2022/alpinejs.mjs"
+		import Blackberry from "./blackberry.js";
+
+		window.Alpine = Alpine;
+		Alpine.plugin(Blackberry());
+		Alpine.start();
+	</script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+	<style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        :root {
+            --blackberry-dark: #1a1b26;
+            --blackberry-main: #2e3440;
+            --blackberry-light: #434c5e;
+            --blackberry-accent: #88c0d0;
+            --blackberry-text: #d8dee9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--blackberry-dark);
+            background-image:
+                linear-gradient(var(--blackberry-light) 1px, transparent 1px),
+                linear-gradient(90deg, var(--blackberry-light) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: -1px -1px;
+            color: var(--blackberry-text);
+            font-family: 'Press Start 2P', monospace;
+            line-height: 1.6;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* Add a subtle overlay to make the grid more subtle */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--blackberry-main);
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: var(--blackberry-main);
+            border: 4px solid var(--blackberry-light);
+            box-shadow: 8px 8px 0 var(--blackberry-dark);
+            position: relative;
+            z-index: 1;
+        }
+
+        h1, h2, h3 {
+            color: var(--blackberry-accent);
+            margin: 2rem 0 1rem;
+            text-shadow: 2px 2px 0 var(--blackberry-dark);
+        }
+
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            border-bottom: 4px solid var(--blackberry-light);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1rem;
+            margin-top: 2rem;
+        }
+
+        p {
+            margin: 1rem 0;
+            font-size: 0.8rem;
+        }
+
+        pre {
+            background: var(--blackberry-dark) !important;
+            padding: 1rem !important;
+            margin: 1rem 0 !important;
+            border: 2px solid var(--blackberry-light);
+            overflow-x: auto;
+            font-size: 0.8rem;
+        }
+
+        code {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.7rem;
+        }
+
+        .header-logo-container {
+        	display: flex;
+         	flex-direction: row;
+			justify-content: center;
+			align-items: center;
+			margin: 2rem 0;
+        }
+
+        .header-logo {
+			display: block;
+			margin: 0 auto;
+			width: 100px;
+			filter: drop-shadow(2px 2px 0 var(--blackberry-dark));
+		}
+
+        .feature-list {
+            margin: 1rem 0;
+            padding-left: 1rem;
+        }
+
+        .feature-list li {
+            margin: 0.5rem 0;
+            list-style: none;
+            position: relative;
+            padding-left: 1.5rem;
+            font-size: 0.8rem;
+        }
+
+        .feature-list li::before {
+            content: "►";
+            position: absolute;
+            left: 0;
+            color: var(--blackberry-accent);
+        }
+
+        .note {
+            background: var(--blackberry-light);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-left: 4px solid var(--blackberry-accent);
+        }
+    </style>
+</head>
+<body>
+	<div class="container">
+        <h1>Blackberry.js</h1>
+
+        <div class="header-logo-container">
+        	<img class="header-logo" src="/blackberry.png">
+         	<img class="header-logo" src="/blackberry.png">
+         	<img class="header-logo" src="/blackberry.png">
+         	<img class="header-logo" src="/blackberry.png">
+         	<img class="header-logo" src="/blackberry.png">
+        </div>
+
+        <p>A lightweight component framework for building modern web applications with a delightfully simple syntax.</p>
+
+        <h2>Getting Started</h2>
+        <p>Blackberry.js lets you create reusable components with scoped styling and reactive data management.</p>
+
+        <h3>Basic Component</h3>
+        <pre><code class="language-html">&lt;template blackberry tag="counter-component" props="initial"&gt;
+    &lt;style scoped&gt;
+        button { color: red; }
+    &lt;/style&gt;
+    &lt;script setup&gt;
+        $data.count = Number($props.initial ?? 0)
+        $effect(() => console.log('count changed', $data.count))
+        $cleanup(() => console.log("bye"))
+    &lt;/script&gt;
+    &lt;markup&gt;
+        &lt;button @click="count++"&gt;count: &lt;span x-text="count"&gt;&lt;/span&gt;&lt;/button&gt;
+    &lt;/markup&gt;
+&lt;/template&gt;
+&lt;counter-component initial="10"&gt;&lt;/counter-component&gt;</code></pre>
+
+        <h2>Key Features</h2>
+        <ul class="feature-list">
+            <li>Scoped Styling: Keep your CSS isolated to components</li>
+            <li>Reactive Data: Automatic updates when your data changes</li>
+            <li>Lifecycle Hooks: Setup and cleanup made easy</li>
+            <li>Props System: Pass data between components seamlessly</li>
+        </ul>
+
+        <h2>Component Structure</h2>
+        <p>Each Blackberry component consists of three optional sections:</p>
+
+        <h3>&lt;style scoped&gt;</h3>
+        <p>Define component-specific styles that won't leak to other elements.</p>
+
+        <h3>&lt;script setup&gt;</h3>
+        <p>Initialize component data and define reactive behaviors using special variables:</p>
+        <ul class="feature-list">
+            <li>$data: Component's reactive state</li>
+            <li>$props: Input properties</li>
+            <li>$effect: Run side effects when dependencies change</li>
+            <li>$cleanup: Clean up resources when component unmounts</li>
+        </ul>
+
+        <h3>&lt;markup&gt;</h3>
+        <p>Define your component's HTML structure with reactive bindings:</p>
+        <ul class="feature-list">
+            <li>@click: Event binding</li>
+            <li>x-text: Text content binding</li>
+            <li>x-model: Two-way data binding</li>
+        </ul>
+
+        <div class="note">
+            <p>💡 All components must use the 'blackberry' attribute and specify a unique tag name.</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+</body>
+</html>

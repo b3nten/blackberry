@@ -53,12 +53,7 @@ function define(alpine, tagname, { script, style, markup, props })
 	scopedSheet.replaceSync(style ?? "")
 	const sheets = [scopedSheet]
 
-	const setup = new Function('$el', '$props', '$cleanup', "$state", "$effect", `
-
-		${script ?? ""}
-
-		return typeof $data === "undefined" ? {} : $data;
-	`);
+	const setup = new Function('$data', '$el', '$props', '$cleanup', "$state", "$effect", script);
 
 	customElements.define(tagname, class extends HTMLElement
 	{
@@ -76,7 +71,6 @@ function define(alpine, tagname, { script, style, markup, props })
 		connectedCallback()
 		{
 			this.attachShadow({ mode: "open" });
-
 			// css
 			this.shadowRoot.adoptedStyleSheets = sheets;
 
@@ -90,9 +84,10 @@ function define(alpine, tagname, { script, style, markup, props })
 					const $effect = (fn) => void this.effects.push(alpine.effect(fn));
 					return {
 						init() {
-							const data = setup.call(self, self, self.props, $cleanup, alpine.reactive, $effect)
-							Object.assign(this, data);
-							this.props = self.props
+							const data = {}
+							setup.call(self, data, self, self.props, $cleanup, alpine.reactive, $effect)
+							Object.assign(this, data)
+							Object.assign(this, self.props)
 						},
 					}
 				})
