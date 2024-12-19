@@ -37,9 +37,9 @@ function parseTemplate(element, alpine)
 	if (customElements.get(tagName)) return;
 
 	// parse and extract style and setup script's if available
-	const script = element.content.querySelector("script[setup]");
-	const style = element.content.querySelector("style[scoped]");
-	const markup = element.content.querySelector('markup')
+	const script = element.content.querySelector("script[setup]")?.innerHTML ?? ""
+	const style = element.content.querySelector("style[scoped]")?.innerHTML ?? ""
+	const markup = element.content.querySelector('markup') ?? ""
 	const props = element.getAttribute("props")?.split(",").map(prop => prop.trim()) ?? [];
 
 	define(alpine, tagName, { script, style, markup, props })
@@ -50,12 +50,12 @@ function define(alpine, tagname, { script, style, markup, props })
 	if (customElements.get(tagname)) return;
 
 	const scopedSheet = new CSSStyleSheet();
-	scopedSheet.replaceSync(style.innerHTML ?? "");
+	scopedSheet.replaceSync(style ?? "")
 	const sheets = [scopedSheet]
 
 	const setup = new Function('$el', '$props', '$cleanup', "$state", "$effect", `
 
-		${script.innerHTML ?? ""}
+		${script ?? ""}
 
 		return typeof $data === "undefined" ? {} : $data;
 	`);
@@ -100,7 +100,15 @@ function define(alpine, tagname, { script, style, markup, props })
 
 			const el = document.createElement('x-provider')
 			el.setAttribute("x-data", dataName);
-			for(let x of markup.children) el.appendChild(x.cloneNode(true))
+
+			if (typeof markup === "string")
+			{
+				el.innerHTML = markup;
+		 	}
+			else
+			{
+				for(let x of markup.children) el.appendChild(x.cloneNode(true))
+			}
 			this.shadowRoot.appendChild(el);
 			alpine.initTree(this.shadowRoot);
 		}
@@ -114,6 +122,13 @@ function define(alpine, tagname, { script, style, markup, props })
 			this.effects.forEach(fn => alpine.release(fn));
 		}
  	})
+}
+
+// requires window.Alpine
+export function defineComponent({ tag, script, style, markup, props })
+{
+	if(!window.Alpine) throw new Error("window.Alpine is not defined");
+	define(window.Alpine, tag, { script, style, markup, props })
 }
 
 const alpineDataRegisterMap = new Set();
