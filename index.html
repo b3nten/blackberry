@@ -51,7 +51,6 @@
 				}
 			}
 
-			/* Add a subtle overlay to make the grid more subtle */
 			body::before {
 				content: "";
 				position: absolute;
@@ -129,8 +128,6 @@
 
 			pre {
 				background: var(--blackberry-dark) !important;
-				padding: 1rem !important;
-				margin: 1rem 0 !important;
 				border: 2px solid var(--blackberry-light);
 				overflow-x: auto;
 				font-size: 0.8rem;
@@ -210,6 +207,82 @@
 		/>
 	</head>
 	<body>
+		<template blackberry tag="counter-component" props="initial">
+			<script setup>
+				$data.count = Number($props.initial ?? 0);
+				$effect(() => console.log("count changed", $data.count));
+				$cleanup(() => console.log("bye"));
+			</script>
+			<markup>
+				<button @click="count++">
+					count:
+					<span x-text="count"></span>
+				</button>
+			</markup>
+			<style scoped>
+				button {
+					background: var(--blackberry-light);
+					padding: 4px 8px;
+					border: 2px solid var(--blackberry-accent);
+					font-family: "VT323", monospace;
+					font-size: 2rem;
+					color: var(--blackberry-text);
+					box-shadow: 4px 4px 0 var(--blackberry-dark);
+					transition: all 90ms;
+
+					&:hover {
+						transform: translateY(-2px);
+						box-shadow: 6px 6px 0 var(--blackberry-dark);
+					}
+
+					&:active {
+						transform: translateY(2px);
+						box-shadow: 4px 4px 0 var(--blackberry-dark);
+					}
+				}
+			</style>
+		</template>
+
+		<template blackberry tag="x-note">
+			<style scoped>
+				div {
+					background: var(--blackberry-light);
+					padding: 2px 0.5rem;
+					margin: 1rem 0;
+					border-left: 4px solid var(--blackberry-accent);
+					font-size: 1.25rem;
+					font-family: "VT323", monospace;
+				}
+			</style>
+			<markup>
+				<div>
+					<p>
+						💡 <span><slot></slot></span>
+					</p>
+				</div>
+			</markup>
+		</template>
+
+		<template blackberry tag="inline-code">
+			<style scoped>
+				code {
+					background: var(--blackberry-light);
+					padding: 2px 0.5rem;
+					margin: 1rem 0;
+					background-color: var(--blackberry-accent);
+					color: var(--blackberry-dark);
+					border-radius: 0.25rem;
+					font-size: 1.25rem;
+					font-family: "VT323", monospace;
+				}
+			</style>
+			<markup>
+				<code>
+					<span><slot></slot></span>
+				</code>
+			</markup>
+		</template>
+
 		<div class="container">
 			<h1 class="title">Blackberry.js</h1>
 
@@ -230,13 +303,14 @@
 			<h2 class="title">Getting Started</h2>
 			<p class="text">
 				Blackberry.js lets you create reusable components using
-				Alpine.js, with scoped styles and a composable component model,
+				Alpine.js with scoped styles and a composable component model,
 				without a build step or additional dependencies.
 			</p>
 
 			<pre>
         	<code class="language-html">
 &lt;template blackberry tag="counter-component" props="initial"&gt;
+
 	&lt;script setup&gt;
 		$data.count = Number($props.initial ?? 0)
 	 	$effect(() => console.log('count changed', $data.count))
@@ -248,66 +322,154 @@
 	&lt;/markup&gt;
 
 	&lt;style scoped&gt;
-		button { color: red; }
+		button {
+			background: var(--blackberry-light);
+			padding: 4px 8px;
+			border: 2px solid var(--blackberry-accent);
+			font-family: "VT323", monospace;
+			font-size: 2rem;
+			color: var(--blackberry-text);
+			box-shadow: 4px 4px 0 var(--blackberry-dark);
+			transition: all 90ms;
+
+			&:hover {
+				transform: translateY(-2px);
+				box-shadow: 6px 6px 0 var(--blackberry-dark);
+			}
+
+			&:active {
+				transform: translateY(2px);
+				box-shadow: 4px 4px 0 var(--blackberry-dark);
+			}
+		}
 	&lt;/style&gt;
+
 &lt;/template&gt;
 
-&lt;counter-component initial="10"&gt;&lt;/counter-component&gt;
+&lt;counter-component initial="3"&gt;&lt;/counter-component&gt;
         	</code>
         </pre>
 
-			<spacer-berries></spacer-berries>
+			<counter-component initial="3"></counter-component>
 
-			<h2 class="title">Key Features</h2>
-			<ul class="feature-list">
-				<li>Scoped Styling: Keep your CSS isolated to components</li>
-				<li>Reactive Data: Automatic updates when your data changes</li>
-				<li>Lifecycle Hooks: Setup and cleanup made easy</li>
-				<li>Props System: Pass data between components seamlessly</li>
-			</ul>
-
-			<h2 class="title">Component Structure</h2>
 			<p class="text">
-				Each Blackberry component consists of three optional sections:
+				Blackberry.js is inspired by
+				<a href="https://strawberry.quest" target="_blank"
+					>Strawberry.js</a
+				>, and is designed to be used as a lightweight html-first
+				alternative to frameworks like Vue and Svelte, but works without
+				requiring build tooling or a complex dependency tree.
 			</p>
 
-			<h3 class="title">&lt;style scoped&gt;</h3>
+			<h2 class="title">Setup</h2>
 			<p class="text">
-				Define component-specific styles that won't leak to other
-				elements.
+				The ideal way of using Blackberry.js is by copying the source
+				code into your project directory. You can either use the source
+				code, minified source, or a version that is bundled with
+				alpine.js and automatically initalizes both.
+			</p>
+			<pre>
+				<code class="language-html">
+Import and initalize Alpine.js and Blackberry.js:
+
+&lt;script type="module"&gt;
+	import Alpine from "/alpine.js";
+	import Blackberry from "/blackberry@0.1.0.min.js";
+
+	window.Alpine = Alpine;
+	Alpine.plugin(Blackberry());
+	Alpine.start();
+&lt;/script&gt;
+
+Or you can automatically initialize Blackberry.js & Alpine.js:
+
+&lt;script type="module" src="/blackberry@0.1.0.bundle.js"&gt;
+				</code>
+			</pre>
+
+			<h2 class="title">Guide</h2>
+
+			<p class="text">
+				Components can be created anywhere inside of a document body,
+				using a template tag with a 'blackberry' attribute. The tagname
+				of the component is defined by the 'tag' attribute, and a list
+				of attribute names can be provided.
 			</p>
 
-			<h3 class="title">&lt;script setup&gt;</h3>
-			<p class="text">
-				Initialize component data and define reactive behaviors using
-				special variables:
-			</p>
-			<ul class="feature-list">
-				<li>$data: Component's reactive state</li>
-				<li>$props: Input properties</li>
-				<li>$effect: Run side effects when dependencies change</li>
-				<li>$cleanup: Clean up resources when component unmounts</li>
-			</ul>
+			<pre>
+				<code class="language-html">
+&lt;template blackberry tag="my-first-component" props="foo, bar"&gt;&lt;/template&gt;
+				</code>
+			</pre>
 
-			<h3 class="title">&lt;markup&gt;</h3>
 			<p class="text">
-				Define your component's HTML structure with reactive bindings:
+				Inside of the template tag, you can define a script tag with the
+				'setup' attribute, which is used to define reactive data, props,
+				effects, cleanup, event handlers, etc. Any value attached to the
+				$data object will be available to the template, along with
+				values in $props. Both of these objects are reactive, and values
+				set on $data are made reactive. You can define cleanup functions
+				with the $cleanup function, which are executed when the
+				component is destroyed.
 			</p>
-			<ul class="feature-list">
-				<li>@click: Event binding</li>
-				<li>x-text: Text content binding</li>
-				<li>x-model: Two-way data binding</li>
-			</ul>
+			<pre>
+				<code class="language-html">
+&lt;template blackberry tag="my-first-component" props="count, text"&gt;
+	&lt;script setup&gt;
+		$data.count = Number($props.count ?? "0"); // reactive
+		$cleanup(() => console.log("bye")); // called on destroy
+	&lt;script&gt;
+	&lt;markup&gt;
+		&lt;p x-text="props.text"&gt;&lt;p&gt;
+		&lt;p>the count is &lt;span x-text="count"&gt;&lt;span&gt;&lt;p&gt;
+	&lt;markup&gt;
+&lt;template&gt;
+				</code>
+			</pre>
 
-			<div class="note">
-				<p>
-					💡 All components must use the 'blackberry' attribute and
-					specify a unique tag name.
-				</p>
-			</div>
+			<x-note>
+				You can create derived values by using a function. Eg.
+				<inline-code>
+					$data.double = () => $props.count * 2
+				</inline-code>
+			</x-note>
+
+			<p class="text">
+				Styles can be defined in a style tag with the scoped attribute.
+				Styles defined here are scoped to the component and will not
+				leak out to the document, so you can use simpler selectors
+				without worring about specificity. Ids and classes defined in
+				the component will be unique to the component.
+			</p>
+			<pre><code class="language-html">
+&lt;template blackberry tag="my-first-component" props="count, text"&gt;
+&lt;script setup&gt;
+	$data.count = Number($props.count ?? "0"); // reactive
+	$cleanup(() => console.log("bye")); // called on destroy
+&lt;script&gt;
+&lt;markup&gt;
+	&lt;p x-text="props.text"&gt;&lt;p&gt;
+	&lt;p>the count is &lt;span id="count-value" x-text="count"&gt;&lt;span&gt;&lt;p&gt;
+&lt;markup&gt;
+&lt;style scoped&gt;
+	p {
+		color: red;
+	}
+
+	#count-value {
+		font-weight: bold;
+	}
+&lt;style&gt;
+&lt;template&gt;
+			</code>
+		</pre>
 		</div>
 
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"
+		>
+			<script>
+					<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js">
+		</script>
 	</body>
 </html>

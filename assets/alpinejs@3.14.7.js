@@ -1,4 +1,4 @@
-/* esm.sh - esbuild bundle(alpinejs@3.14.7) es2022 production */
+/* alpinejs@3.14.7 es2022 production */
 var $e = !1,
 	Pe = !1,
 	N = [],
