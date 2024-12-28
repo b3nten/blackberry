@@ -227,6 +227,8 @@
 				display: block;
 				height: 4px;
 				width: 100%;
+				margin-top: 3rem;
+				margin-bottom: 3rem;
 				background: var(--blackberry-light);
 			}
 
@@ -425,9 +427,7 @@
 		</template>
 
 		<template blackberry="inline-code">
-			<code>
-				<span><slot></slot></span>
-			</code>
+			<code><slot></slot></code>
 			<style>
 				code {
 					background: var(--blackberry-light);
@@ -522,6 +522,8 @@
 				requiring build tooling or a complex dependency tree.
 			</p>
 
+			<spacer-line></spacer-line>
+
 			<h2 class="title">Setup</h2>
 			<p class="text">
 				The ideal way of using Blackberry.js is by copying the source
@@ -542,6 +544,8 @@
 <&excl;-- Or you can automatically initialize Blackberry.js & Alpine.js: -->
 &lt;script type="module" src="/blackberry@0.1.0.bundle.js"&gt;
 </code></pre>
+
+			<spacer-line></spacer-line>
 
 			<h2 class="title">Guide</h2>
 
