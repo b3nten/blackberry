@@ -1,7 +1,16 @@
 <!doctype html>
 <html lang="en">
 	<head>
+
+		<!--	Deps	-->
+		<script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+		<link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+
+		<!--	Meta	-->
 		<title>Blackberry.js - for the artisinal web</title>
+
+		<!--	Init	-->
 		<script type="module">
 			import Alpine from "./assets/alpinejs@3.14.7.js";
 			import Blackberry from "./src/blackberry.js";
@@ -10,6 +19,10 @@
 			window.Blackberry = Blackberry;
 			console.log("Blackberry.js loaded", Blackberry);
 			Alpine.start();
+
+			const lenis = new Lenis({
+				autoRaf: true,
+			});
 
 			Blackberry.defineComponent({
 				tag: "defined-component",
@@ -30,6 +43,8 @@
 				`
 			})
 		</script>
+
+		<!-- 	Styles	-->
 		<style>
 			@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 			@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
@@ -221,20 +236,144 @@
 				width: 100%;
 			}
 		</style>
-		<link
-			href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
-			rel="stylesheet"
-		/>
+		<style>
+			pre[class*="language-"],
+			code[class*="language-"] {
+				color: #d8dee9;
+				font-size: 1em;
+				text-shadow: none;
+				font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+				direction: ltr;
+				text-align: left;
+				white-space: pre;
+				word-spacing: normal;
+				word-break: normal;
+				line-height: 1.5;
+				-moz-tab-size: 4;
+				-o-tab-size: 4;
+				tab-size: 4;
+				-webkit-hyphens: none;
+				-moz-hyphens: none;
+				-ms-hyphens: none;
+				hyphens: none;
+			}
+			pre[class*="language-"]::selection,
+			code[class*="language-"]::selection,
+			pre[class*="language-"]::mozselection,
+			code[class*="language-"]::mozselection {
+				text-shadow: none;
+				background: none;
+			}
+			@media print {
+				pre[class*="language-"],
+				code[class*="language-"] {
+					text-shadow: none;
+				}
+			}
+			pre[class*="language-"] {
+				padding: 1em;
+				margin: .5em 0;
+				overflow: auto;
+				background: #2e3440;
+			}
+			:not(pre) > code[class*="language-"] {
+				padding: .1em;
+				border-radius: .3em;
+				color: #d8dee9;
+				background: #2e3440;
+			}
+			/*********************************************************
+            * Tokens
+            */
+			.namespace {
+				opacity: .7;
+			}
+			.token.comment,
+			.token.prolog,
+			.token.doctype,
+			.token.cdata {
+				color: #606e87;
+			}
+			.token.punctuation {
+				color: #81a1c1;
+			}
+			.token.property,
+			.token.tag,
+			.token.boolean,
+			.token.number,
+			.token.constant,
+			.token.symbol,
+			.token.deleted {
+				color: var(--blackberry-text);
+			}
+			.token.selector,
+			.token.attr-name,
+			.token.string,
+			.token.char,
+			.token.builtin,
+			.token.inserted {
+				color: var(--blackberry-accent);
+			}
+			.token.operator,
+			.token.entity,
+			.token.url,
+			.language-css .token.string,
+			.style .token.string {
+				color: #80a2c1;
+				background: none;
+			}
+			.token.atrule,
+			.token.attr-value,
+			.token.keyword {
+				color: #81a1c1;
+			}
+			.token.function {
+				color: #8fbcbc;
+			}
+			.token.regex,
+			.token.important,
+			.token.variable {
+				color: #ee9900;
+			}
+			.token.important,
+			.token.bold {
+				font-weight: bold;
+			}
+			.token.italic {
+				font-style: italic;
+			}
+			.token.entity {
+				cursor: help;
+			}
+			/*********************************************************
+            * Line highlighting
+            */
+			pre[data-line] {
+				position: relative;
+			}
+			pre[class*="language-"] > code[class*="language-"] {
+				position: relative;
+				z-index: 1;
+			}
+			.line-highlight {
+				position: absolute;
+				left: 0;
+				right: 0;
+				padding: inherit 0;
+				margin-top: 1em;
+				background: #3b4251;
+				box-shadow: inset 5px 0 0 #d8dee9;
+				z-index: 0;
+				pointer-events: none;
+				line-height: inherit;
+				white-space: pre;
+			}
+		</style>
 	</head>
 	<body>
-
-		<defined-component></defined-component>
-
 		<template blackberry="counter-component" attributes="initial">
-			<button @click="increment">
-				count:
-				<span x-text="count"></span>
-			</button>
+
+			<button @click="increment" x-text="`the count is ${count}`"></button>
 
 			<script>
 				$state.count = Number($attributes.initial ?? 0);
@@ -327,21 +466,24 @@
 				without a build step or additional dependencies.
 			</p>
 
-			<pre>
-        	<code class="language-html">
-&lt;template blackberry tag="counter-component" props="initial"&gt;
+<pre><code class="language-html">&lt;template blackberry="counter-component" props="initial"&gt;
 
-	&lt;script setup&gt;
-		$data.count = Number($props.initial ?? 0)
-	 	$effect(() => console.log('count changed', $data.count))
+	&lt;script&gt;
+		// $state is a reactive object available to the template
+		$state.count = Number($props.initial ?? 0)
+
+		$state.increment = () => $state.count++
+
+		// $effect is used to run a function when a reactive value changes
+	 	$effect(() => console.log('count changed', $data.count));
+
+	 	// $cleanup is used to run a function when the component is destroyed
 	  	$cleanup(() => console.log("bye"))
 	&lt;/script&gt;
 
-	&lt;markup&gt;
-		&lt;button @click="count++"&gt;count: &lt;span x-text="count"&gt;&lt;/span&gt;&lt;/button&gt;
-	&lt;/markup&gt;
+	&lt;button @click="increment" x-text="`the count is ${count}`"&gt;&lt;/button&gt;
 
-	&lt;style scoped&gt;
+	&lt;style&gt;
 		button {
 			background: var(--blackberry-light);
 			padding: 4px 8px;
@@ -367,9 +509,8 @@
 &lt;/template&gt;
 
 &lt;counter-component initial="3"&gt;&lt;/counter-component&gt;
-        	</code>
-        </pre>
-
+</code></pre>
+			<p>result</p>
 			<counter-component initial="3"></counter-component>
 
 			<p class="text">
@@ -388,104 +529,118 @@
 				code, minified source, or a version that is bundled with
 				alpine.js and automatically initalizes both.
 			</p>
-			<pre>
-				<code class="language-html">
-Import and initalize Alpine.js and Blackberry.js:
-
+<pre><code class="language-html"><&excl;-- Import and initalize Alpine.js and Blackberry.js: -->
 &lt;script type="module"&gt;
 	import Alpine from "/alpine.js";
 	import Blackberry from "/blackberry@0.1.0.min.js";
 
 	window.Alpine = Alpine;
-	Alpine.plugin(Blackberry());
+	Alpine.plugin(Blackberry.alpinePlugin());
 	Alpine.start();
 &lt;/script&gt;
 
-Or you can automatically initialize Blackberry.js & Alpine.js:
-
+<&excl;-- Or you can automatically initialize Blackberry.js & Alpine.js: -->
 &lt;script type="module" src="/blackberry@0.1.0.bundle.js"&gt;
-				</code>
-			</pre>
+</code></pre>
 
 			<h2 class="title">Guide</h2>
 
 			<p class="text">
 				Components can be created anywhere inside of a document body,
 				using a template tag with a 'blackberry' attribute. The tagname
-				of the component is defined by the 'tag' attribute, and a list
-				of attribute names can be provided.
+				of the component is defined by the value, and a list
+				of attribute names can be provided in the 'attributes' attribute.
+			</p>
+			<p class="text">
+				Alternatively, components can be defined using the
+				<inline-code>Blackberry.defineComponent()</inline-code> method.
+				This method bypasses Alpine.js and allows for direct binding of
+				reactive data and functions inside the template.
 			</p>
 
-			<pre>
-				<code class="language-html">
-&lt;template blackberry tag="my-first-component" props="foo, bar"&gt;&lt;/template&gt;
-				</code>
-			</pre>
+			<h3 class="title">Attributes</h3>
+			<p class="text">
+				Attributes can be observed by the component by providing a list of
+				attribute names in the 'attributes' attribute of the template tag.
+				These attributes can be accessed using the <inline-code>$attributes</inline-code> object, which is reactive.
+			</p>
+
+			<h3 class="title">State</h3>
+			<p class="text">
+				State is reactive data that can be accessed and modified by the
+				component. State is defined using the <inline-code>$state</inline-code> object, and is available to
+				Alpine attributes inside the template.
+			</p>
+
+			<h3 class="title">Effects</h3>
+			<p class="text">
+				Effects are functions that run when a reactive value changes. They
+				are defined using the <inline-code>$effect()</inline-code> method, and can be used to run side effects
+				like logging or updating the DOM.
+			</p>
+
+			<h3 class="title">Cleanup</h3>
+			<p class="text">
+				Cleanup functions are run when the component is destroyed. They
+				are defined using the <inline-code>$cleanup()</inline-code> method, and can be used to clean up
+				resources like event listeners or timers.
+			</p>
+
+			<h3 class="title">Props</h3>
+			<p class="text">
+				Props can be defined on elements with the `.` prefix. This can be used to pass any javascript value to a component.
+			</p>
+<pre><code class="language-html">&lt;script&gt;
+	$state.object = { key: "value" }
+&lt;/script&gt;
+&lt;custom-component .object="object"&gt;&lt;/custom-component&gt;
+</code></pre>
 
 			<p class="text">
-				Inside of the template tag, you can define a script tag with the
-				'setup' attribute, which is used to define reactive data, props,
-				effects, cleanup, event handlers, etc. Any value attached to the
-				$data object will be available to the template, along with
-				values in $props. Both of these objects are reactive, and values
-				set on $data are made reactive. You can define cleanup functions
-				with the $cleanup function, which are executed when the
-				component is destroyed.
+				The custom-component component can access the object prop using the $props object. This lets you pass
+				functions or objects to child components directly.
 			</p>
-			<pre>
-				<code class="language-html">
-&lt;template blackberry tag="my-first-component" props="count, text"&gt;
-	&lt;script setup&gt;
-		$data.count = Number($props.count ?? "0"); // reactive
-		$cleanup(() => console.log("bye")); // called on destroy
-	&lt;script&gt;
-	&lt;markup&gt;
-		&lt;p x-text="props.text"&gt;&lt;p&gt;
-		&lt;p>the count is &lt;span x-text="count"&gt;&lt;span&gt;&lt;p&gt;
-	&lt;markup&gt;
-&lt;template&gt;
-				</code>
-			</pre>
 
-			<x-note>
-				You can create derived values by using a function. Eg.
-				<inline-code>
-					$data.double = () => $props.count * 2
-				</inline-code>
-			</x-note>
-
+			<h3 class="title">Slots</h3>
 			<p class="text">
-				Styles can be defined in a style tag with the scoped attribute.
-				Styles defined here are scoped to the component and will not
-				leak out to the document, so you can use simpler selectors
-				without worring about specificity. Ids and classes defined in
-				the component will be unique to the component.
+				Slots are used to pass content to a component.
+				They are defined using the <inline-code>&lt;slot&gt;</inline-code> tag, and allow for composition of components.
 			</p>
-			<pre><code class="language-html">
-&lt;template blackberry tag="my-first-component" props="count, text"&gt;
-&lt;script setup&gt;
-	$data.count = Number($props.count ?? "0"); // reactive
-	$cleanup(() => console.log("bye")); // called on destroy
-&lt;script&gt;
-&lt;markup&gt;
-	&lt;p x-text="props.text"&gt;&lt;p&gt;
-	&lt;p>the count is &lt;span id="count-value" x-text="count"&gt;&lt;span&gt;&lt;p&gt;
-&lt;markup&gt;
-&lt;style scoped&gt;
-	p {
-		color: red;
-	}
 
-	#count-value {
-		font-weight: bold;
-	}
-&lt;style&gt;
-&lt;template&gt;
-			</code>
-		</pre>
+			<h3 class="title">Styles</h3>
+			<p class="text">
+				Styles can be scoped to a component using the <inline-code>&lt;style&gt;</inline-code> tag.
+			</p>
+
+			<h3 class="title">$element</h3>
+			<p class="text">
+				The $element object is a reference to the component's root element.
+				It can be used to access the component's DOM element directly.
+			</p>
+
+			<h3 class="title">$store</h3>
+			<p class="text">
+				The $store method is used to create a reactive store that can be accessed by the component.
+				The store is deeply reactive, and can be used to store complex data structures.
+			</p>
+<pre><code class="language-html">&lt;script&gt;
+	const store = $store({
+		colors = ["red", "green", "blue"],
+	})
+	$state.store = store
+&lt;/script&gt;
+&lt;button @click="store.colors.push('yellow')"&gt;Add Yellow&lt;/button&gt;
+&lt;ul&gt;
+	&lt;template x-for="color in store.colors"&gt;
+		&lt;li x-text="color"&gt;&lt;/li&gt;
+	&lt;/template&gt;
+&lt;/ul&gt;
+</code></pre>
+
+			<h3 class="title">defineComponent()</h3>
+			<p class="text">
+
+			</p>
 		</div>
-
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
 	</body>
 </html>
