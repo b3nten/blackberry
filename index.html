@@ -5,10 +5,30 @@
 		<script type="module">
 			import Alpine from "./assets/alpinejs@3.14.7.js";
 			import Blackberry from "./src/blackberry.js";
-
+			Alpine.plugin(Blackberry.alpinePlugin());
 			window.Alpine = Alpine;
-			Alpine.plugin(Blackberry());
+			window.Blackberry = Blackberry;
+			console.log("Blackberry.js loaded", Blackberry);
 			Alpine.start();
+
+			Blackberry.defineComponent({
+				tag: "defined-component",
+				render: ({ state, store, effect, cleanup }) => {
+					let count = store({ value: 0 })
+					state.countLol = 0
+					effect(() => console.log("count changed", count.value))
+					cleanup(() => console.log("bye"))
+					return () => Blackberry.html`
+						<button @click="${() => count.value++}">
+							count: ${count.value}
+							countLol: ${state.countLol}
+						</button>
+					`
+				},
+				style: Blackberry.css`
+					button { color: red; }
+				`
+			})
 		</script>
 		<style>
 			@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
@@ -207,19 +227,22 @@
 		/>
 	</head>
 	<body>
-		<template blackberry tag="counter-component" props="initial">
-			<script setup>
-				$data.count = Number($props.initial ?? 0);
-				$effect(() => console.log("count changed", $data.count));
-				$cleanup(() => console.log("bye"));
+
+		<defined-component></defined-component>
+
+		<template blackberry="counter-component" attributes="initial">
+			<button @click="increment">
+				count:
+				<span x-text="count"></span>
+			</button>
+
+			<script>
+				$state.count = Number($attributes.initial ?? 0);
+				$state.increment = () => $state.count++
+				$effect(() => console.log("count changed", $state.count));
 			</script>
-			<markup>
-				<button @click="count++">
-					count:
-					<span x-text="count"></span>
-				</button>
-			</markup>
-			<style scoped>
+
+			<style>
 				button {
 					background: var(--blackberry-light);
 					padding: 4px 8px;
@@ -241,10 +264,16 @@
 					}
 				}
 			</style>
+
 		</template>
 
-		<template blackberry tag="x-note">
-			<style scoped>
+		<template blackberry="x-note">
+			<div>
+				<p>
+					💡 <span><slot></slot></span>
+				</p>
+			</div>
+			<style>
 				div {
 					background: var(--blackberry-light);
 					padding: 2px 0.5rem;
@@ -254,17 +283,13 @@
 					font-family: "VT323", monospace;
 				}
 			</style>
-			<markup>
-				<div>
-					<p>
-						💡 <span><slot></slot></span>
-					</p>
-				</div>
-			</markup>
 		</template>
 
-		<template blackberry tag="inline-code">
-			<style scoped>
+		<template blackberry="inline-code">
+			<code>
+				<span><slot></slot></span>
+			</code>
+			<style>
 				code {
 					background: var(--blackberry-light);
 					padding: 2px 0.5rem;
@@ -276,11 +301,6 @@
 					font-family: "VT323", monospace;
 				}
 			</style>
-			<markup>
-				<code>
-					<span><slot></slot></span>
-				</code>
-			</markup>
 		</template>
 
 		<div class="container">
@@ -465,11 +485,7 @@ Or you can automatically initialize Blackberry.js & Alpine.js:
 		</pre>
 		</div>
 
-		<script
-			src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"
-		>
-			<script>
-					<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js">
-		</script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
 	</body>
 </html>
