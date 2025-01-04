@@ -1,13 +1,3 @@
-/*
-Serve is a very simple static file server in go
-Usage:
-
-	-p="8100": port to serve on
-	-d=".":    the directory of static files to host
-
-Navigating to http://localhost:8100 will display the index.html or directory
-listing file.
-*/
 package main
 
 import (
@@ -38,6 +28,7 @@ func build() {
 		MinifySyntax:     true,
 		Format:           api.FormatESModule,
 		KeepNames:        true,
+		Sourcemap: api.SourceMapNone,
 	})
 
 	if len(result.Errors) != 0 {

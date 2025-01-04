@@ -1,650 +1,575 @@
 <!doctype html>
 <html lang="en">
-	<head>
-
-		<!--	Deps	-->
-		<script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
-		<link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css">
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-
-		<!--	Meta	-->
-		<title>Blackberry.js - for the artisinal web</title>
-
-		<!--	Init	-->
-		<script type="module">
-			import Alpine from "./assets/alpinejs@3.14.7.js";
-			import Blackberry from "./src/blackberry.js";
-			Alpine.plugin(Blackberry.alpinePlugin());
-			window.Alpine = Alpine;
-			window.Blackberry = Blackberry;
-			console.log("Blackberry.js loaded", Blackberry);
-			Alpine.start();
-
-			const lenis = new Lenis({
-				autoRaf: true,
-			});
-
-			Blackberry.defineComponent({
-				tag: "defined-component",
-				render: ({ state, store, effect, cleanup }) => {
-					let count = store({ value: 0 })
-					state.countLol = 0
-					effect(() => console.log("count changed", count.value))
-					cleanup(() => console.log("bye"))
-					return () => Blackberry.html`
-						<button @click="${() => count.value++}">
-							count: ${count.value}
-							countLol: ${state.countLol}
-						</button>
-					`
-				},
-				style: Blackberry.css`
-					button { color: red; }
-				`
-			})
-		</script>
-
-		<!-- 	Styles	-->
-		<style>
-			@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
-			@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
-
-			:root {
-				--blackberry-dark: #1a1b26;
-				--blackberry-main: #2e3440;
-				--blackberry-light: #434c5e;
-				--blackberry-accent: #88c0d0;
-				--blackberry-text: #d8dee9;
-			}
-
-			* {
-				margin: 0;
-				padding: 0;
-				box-sizing: border-box;
-			}
-
-			body {
-				background-color: var(--blackberry-dark);
-				background-image: linear-gradient(
-						var(--blackberry-light) 1px,
-						transparent 1px
-					),
-					linear-gradient(
-						90deg,
-						var(--blackberry-light) 1px,
-						transparent 1px
-					);
-				background-size: 20px 20px;
-				background-position: -1px -1px;
-				color: var(--blackberry-text);
-				font-family: "VT323", monospace;
-				padding: 2rem;
-				position: relative;
-
-				@media (max-width: 768px) {
-					padding: 1rem;
-				}
-			}
-
-			body::before {
-				content: "";
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				background-color: var(--blackberry-main);
-				opacity: 0.7;
-				pointer-events: none;
-				z-index: 0;
-			}
-
-			.container {
-				max-width: 1024px;
-				margin: 0 auto;
-				padding: 2rem;
-				background-color: var(--blackberry-main);
-				border: 4px solid var(--blackberry-light);
-				box-shadow: 8px 8px 0 var(--blackberry-dark);
-				position: relative;
-				z-index: 1;
-
-				@media (max-width: 768px) {
-					padding: 1rem;
-				}
-			}
-
-			h1.title,
-			h2.title,
-			h3.title {
-				color: var(--blackberry-accent);
-				margin: 2rem 0 1rem;
-				text-shadow: 2px 2px 0 var(--blackberry-dark);
-			}
-
-			h1,
-			h2,
-			h3,
-			h4,
-			h5,
-			h6 {
-				font-family: "Press Start 2P", monospace;
-			}
-
-			h1.title {
-				font-size: 2rem;
-				text-align: center;
-				margin-bottom: 2rem;
-				@media (max-width: 550px) {
-					font-size: 1.55rem;
-				}
-			}
-
-			h2.title {
-				font-size: 1.5rem;
-				/* border-bottom: 4px solid var(--blackberry-light); */
-				padding-bottom: 0.5rem;
-				@media (max-width: 550px) {
-					font-size: 1.25rem;
-				}
-			}
-
-			h3.title {
-				font-size: 1rem;
-				margin-top: 2rem;
-			}
-
-			.text {
-				margin: 1rem 0;
-				font-family: "VT323", monospace;
-				font-size: 1.65rem;
-				line-height: 100%;
-			}
-
-			pre {
-				background: var(--blackberry-dark) !important;
-				border: 2px solid var(--blackberry-light);
-				overflow-x: auto;
-				font-size: 0.8rem;
-			}
-
-			.header-logo-container {
-				display: flex;
-				flex-direction: row;
-				justify-content: center;
-				align-items: center;
-				margin: 2rem 0;
-
-				@media (max-width: 768px) {
-					/* hide 2 */
-					& img:nth-child(2) {
-						display: none;
-					}
-				}
-			}
-
-			.header-logo {
-				display: block;
-				margin: 0 auto;
-				width: 100px;
-				filter: drop-shadow(2px 2px 0 var(--blackberry-dark));
-			}
-
-			.feature-list {
-				margin: 1rem 0;
-				padding-left: 1rem;
-			}
-
-			.feature-list li {
-				margin: 0.5rem 0;
-				list-style: none;
-				position: relative;
-				padding-left: 1.5rem;
-				font-size: 1.25rem;
-			}
-
-			.feature-list li::before {
-				content: "►";
-				position: absolute;
-				left: 0;
-				color: var(--blackberry-accent);
-			}
-
-			.note {
-				background: var(--blackberry-light);
-				padding: 0.5rem;
-				margin: 1rem 0;
-				border-left: 4px solid var(--blackberry-accent);
-				font-size: 1.25rem;
-				font-family: "VT323", monospace;
-			}
-
-			.text-center {
-				text-align: center;
-			}
-
-			spacer-line {
-				display: block;
-				height: 4px;
-				width: 100%;
-				margin-top: 3rem;
-				margin-bottom: 3rem;
-				background: var(--blackberry-light);
-			}
-
-			spacer-berries {
-				display: block;
-				height: 4px;
-				width: 100%;
-			}
-		</style>
-		<style>
-			pre[class*="language-"],
-			code[class*="language-"] {
-				color: #d8dee9;
-				font-size: 1em;
-				text-shadow: none;
-				font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-				direction: ltr;
-				text-align: left;
-				white-space: pre;
-				word-spacing: normal;
-				word-break: normal;
-				line-height: 1.5;
-				-moz-tab-size: 4;
-				-o-tab-size: 4;
-				tab-size: 4;
-				-webkit-hyphens: none;
-				-moz-hyphens: none;
-				-ms-hyphens: none;
-				hyphens: none;
-			}
-			pre[class*="language-"]::selection,
-			code[class*="language-"]::selection,
-			pre[class*="language-"]::mozselection,
-			code[class*="language-"]::mozselection {
-				text-shadow: none;
-				background: none;
-			}
-			@media print {
-				pre[class*="language-"],
-				code[class*="language-"] {
-					text-shadow: none;
-				}
-			}
-			pre[class*="language-"] {
-				padding: 1em;
-				margin: .5em 0;
-				overflow: auto;
-				background: #2e3440;
-			}
-			:not(pre) > code[class*="language-"] {
-				padding: .1em;
-				border-radius: .3em;
-				color: #d8dee9;
-				background: #2e3440;
-			}
-			/*********************************************************
-            * Tokens
-            */
-			.namespace {
-				opacity: .7;
-			}
-			.token.comment,
-			.token.prolog,
-			.token.doctype,
-			.token.cdata {
-				color: #606e87;
-			}
-			.token.punctuation {
-				color: #81a1c1;
-			}
-			.token.property,
-			.token.tag,
-			.token.boolean,
-			.token.number,
-			.token.constant,
-			.token.symbol,
-			.token.deleted {
-				color: var(--blackberry-text);
-			}
-			.token.selector,
-			.token.attr-name,
-			.token.string,
-			.token.char,
-			.token.builtin,
-			.token.inserted {
-				color: var(--blackberry-accent);
-			}
-			.token.operator,
-			.token.entity,
-			.token.url,
-			.language-css .token.string,
-			.style .token.string {
-				color: #80a2c1;
-				background: none;
-			}
-			.token.atrule,
-			.token.attr-value,
-			.token.keyword {
-				color: #81a1c1;
-			}
-			.token.function {
-				color: #8fbcbc;
-			}
-			.token.regex,
-			.token.important,
-			.token.variable {
-				color: #ee9900;
-			}
-			.token.important,
-			.token.bold {
-				font-weight: bold;
-			}
-			.token.italic {
-				font-style: italic;
-			}
-			.token.entity {
-				cursor: help;
-			}
-			/*********************************************************
-            * Line highlighting
-            */
-			pre[data-line] {
-				position: relative;
-			}
-			pre[class*="language-"] > code[class*="language-"] {
-				position: relative;
-				z-index: 1;
-			}
-			.line-highlight {
-				position: absolute;
-				left: 0;
-				right: 0;
-				padding: inherit 0;
-				margin-top: 1em;
-				background: #3b4251;
-				box-shadow: inset 5px 0 0 #d8dee9;
-				z-index: 0;
-				pointer-events: none;
-				line-height: inherit;
-				white-space: pre;
-			}
-		</style>
-	</head>
-	<body>
-		<template blackberry="counter-component" attributes="initial">
-
-			<button @click="increment" x-text="`the count is ${count}`"></button>
-
-			<script>
-				$state.count = Number($attributes.initial ?? 0);
-				$state.increment = () => $state.count++
-				$effect(() => console.log("count changed", $state.count));
-			</script>
-
-			<style>
-				button {
-					background: var(--blackberry-light);
-					padding: 4px 8px;
-					border: 2px solid var(--blackberry-accent);
-					font-family: "VT323", monospace;
-					font-size: 2rem;
-					color: var(--blackberry-text);
-					box-shadow: 4px 4px 0 var(--blackberry-dark);
-					transition: all 90ms;
-
-					&:hover {
-						transform: translateY(-2px);
-						box-shadow: 6px 6px 0 var(--blackberry-dark);
-					}
-
-					&:active {
-						transform: translateY(2px);
-						box-shadow: 4px 4px 0 var(--blackberry-dark);
-					}
-				}
-			</style>
-
-		</template>
-
-		<template blackberry="x-note">
-			<div>
-				<p>
-					💡 <span><slot></slot></span>
-				</p>
-			</div>
-			<style>
-				div {
-					background: var(--blackberry-light);
-					padding: 2px 0.5rem;
-					margin: 1rem 0;
-					border-left: 4px solid var(--blackberry-accent);
-					font-size: 1.25rem;
-					font-family: "VT323", monospace;
-				}
-			</style>
-		</template>
-
-		<template blackberry="inline-code">
-			<code><slot></slot></code>
-			<style>
-				code {
-					background: var(--blackberry-light);
-					padding: 2px 0.5rem;
-					margin: 1rem 0;
-					background-color: var(--blackberry-accent);
-					color: var(--blackberry-dark);
-					border-radius: 0.25rem;
-					font-size: 1.25rem;
-					font-family: "VT323", monospace;
-				}
-			</style>
-		</template>
-
-		<div class="container">
-			<h1 class="title">Blackberry.js</h1>
-
-			<div class="header-logo-container">
-				<img class="header-logo" src="/assets/blackberry.png" />
-				<img class="header-logo" src="/assets/blackberry.png" />
-				<img class="header-logo" src="/assets/blackberry.png" />
-				<img class="header-logo" src="/assets/blackberry.png" />
-				<img class="header-logo" src="/assets/blackberry.png" />
-			</div>
-
-			<p class="text text-center">
-				A zero-build framework for the artisanal web.
-			</p>
-
-			<spacer-line></spacer-line>
-
-			<h2 class="title">Getting Started</h2>
-			<p class="text">
-				Blackberry.js lets you create reusable components using
-				Alpine.js with scoped styles and a composable component model,
-				without a build step or additional dependencies.
-			</p>
-
-<pre><code class="language-html">&lt;template blackberry="counter-component" props="initial"&gt;
-
-	&lt;script&gt;
-		// $state is a reactive object available to the template
-		$state.count = Number($props.initial ?? 0)
-
-		$state.increment = () => $state.count++
-
-		// $effect is used to run a function when a reactive value changes
-	 	$effect(() => console.log('count changed', $data.count));
-
-	 	// $cleanup is used to run a function when the component is destroyed
-	  	$cleanup(() => console.log("bye"))
-	&lt;/script&gt;
-
-	&lt;button @click="increment" x-text="`the count is ${count}`"&gt;&lt;/button&gt;
-
-	&lt;style&gt;
-		button {
-			background: var(--blackberry-light);
-			padding: 4px 8px;
-			border: 2px solid var(--blackberry-accent);
-			font-family: "VT323", monospace;
-			font-size: 2rem;
-			color: var(--blackberry-text);
-			box-shadow: 4px 4px 0 var(--blackberry-dark);
-			transition: all 90ms;
-
-			&:hover {
-				transform: translateY(-2px);
-				box-shadow: 6px 6px 0 var(--blackberry-dark);
-			}
-
-			&:active {
-				transform: translateY(2px);
-				box-shadow: 4px 4px 0 var(--blackberry-dark);
-			}
-		}
-	&lt;/style&gt;
-
-&lt;/template&gt;
-
-&lt;counter-component initial="3"&gt;&lt;/counter-component&gt;
-</code></pre>
-			<p>result</p>
-			<counter-component initial="3"></counter-component>
-
-			<p class="text">
-				Blackberry.js is inspired by
-				<a href="https://strawberry.quest" target="_blank"
-					>Strawberry.js</a
-				>, and is designed to be used as a lightweight html-first
-				alternative to frameworks like Vue and Svelte, but works without
-				requiring build tooling or a complex dependency tree.
-			</p>
-
-			<spacer-line></spacer-line>
-
-			<h2 class="title">Setup</h2>
-			<p class="text">
-				The ideal way of using Blackberry.js is by copying the source
-				code into your project directory. You can either use the source
-				code, minified source, or a version that is bundled with
-				alpine.js and automatically initalizes both.
-			</p>
-<pre><code class="language-html"><&excl;-- Import and initalize Alpine.js and Blackberry.js: -->
-&lt;script type="module"&gt;
-	import Alpine from "/alpine.js";
-	import Blackberry from "/blackberry@0.1.0.min.js";
-
-	window.Alpine = Alpine;
-	Alpine.plugin(Blackberry.alpinePlugin());
-	Alpine.start();
-&lt;/script&gt;
-
-<&excl;-- Or you can automatically initialize Blackberry.js & Alpine.js: -->
-&lt;script type="module" src="/blackberry@0.1.0.bundle.js"&gt;
-</code></pre>
-
-			<spacer-line></spacer-line>
-
-			<h2 class="title">Guide</h2>
-
-			<p class="text">
-				Components can be created anywhere inside of a document body,
-				using a template tag with a 'blackberry' attribute. The tagname
-				of the component is defined by the value, and a list
-				of attribute names can be provided in the 'attributes' attribute.
-			</p>
-			<p class="text">
-				Alternatively, components can be defined using the
-				<inline-code>Blackberry.defineComponent()</inline-code> method.
-				This method bypasses Alpine.js and allows for direct binding of
-				reactive data and functions inside the template.
-			</p>
-
-			<h3 class="title">Attributes</h3>
-			<p class="text">
-				Attributes can be observed by the component by providing a list of
-				attribute names in the 'attributes' attribute of the template tag.
-				These attributes can be accessed using the <inline-code>$attributes</inline-code> object, which is reactive.
-			</p>
-
-			<h3 class="title">State</h3>
-			<p class="text">
-				State is reactive data that can be accessed and modified by the
-				component. State is defined using the <inline-code>$state</inline-code> object, and is available to
-				Alpine attributes inside the template.
-			</p>
-
-			<h3 class="title">Effects</h3>
-			<p class="text">
-				Effects are functions that run when a reactive value changes. They
-				are defined using the <inline-code>$effect()</inline-code> method, and can be used to run side effects
-				like logging or updating the DOM.
-			</p>
-
-			<h3 class="title">Cleanup</h3>
-			<p class="text">
-				Cleanup functions are run when the component is destroyed. They
-				are defined using the <inline-code>$cleanup()</inline-code> method, and can be used to clean up
-				resources like event listeners or timers.
-			</p>
-
-			<h3 class="title">Props</h3>
-			<p class="text">
-				Props can be defined on elements with the `.` prefix. This can be used to pass any javascript value to a component.
-			</p>
-<pre><code class="language-html">&lt;script&gt;
-	$state.object = { key: "value" }
-&lt;/script&gt;
-&lt;custom-component .object="object"&gt;&lt;/custom-component&gt;
-</code></pre>
-
-			<p class="text">
-				The custom-component component can access the object prop using the $props object. This lets you pass
-				functions or objects to child components directly.
-			</p>
-
-			<h3 class="title">Slots</h3>
-			<p class="text">
-				Slots are used to pass content to a component.
-				They are defined using the <inline-code>&lt;slot&gt;</inline-code> tag, and allow for composition of components.
-			</p>
-
-			<h3 class="title">Styles</h3>
-			<p class="text">
-				Styles can be scoped to a component using the <inline-code>&lt;style&gt;</inline-code> tag.
-			</p>
-
-			<h3 class="title">$element</h3>
-			<p class="text">
-				The $element object is a reference to the component's root element.
-				It can be used to access the component's DOM element directly.
-			</p>
-
-			<h3 class="title">$store</h3>
-			<p class="text">
-				The $store method is used to create a reactive store that can be accessed by the component.
-				The store is deeply reactive, and can be used to store complex data structures.
-			</p>
-<pre><code class="language-html">&lt;script&gt;
-	const store = $store({
-		colors = ["red", "green", "blue"],
-	})
-	$state.store = store
-&lt;/script&gt;
-&lt;button @click="store.colors.push('yellow')"&gt;Add Yellow&lt;/button&gt;
-&lt;ul&gt;
-	&lt;template x-for="color in store.colors"&gt;
-		&lt;li x-text="color"&gt;&lt;/li&gt;
-	&lt;/template&gt;
-&lt;/ul&gt;
-</code></pre>
-
-			<h3 class="title">defineComponent()</h3>
-			<p class="text">
-
-			</p>
-		</div>
-	</body>
+    <head>
+        <style>body {transition: opacity .25s .3s;} [blackberry-cloak] {opacity: 0;}</style>
+
+        <!--	Deps	-->
+        <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual></script>
+
+        <!--	Meta	-->
+        <title>Blackberry.js - for the artisinal web</title>
+
+        <!--	Init	-->
+        <script type="module">
+            import Alpine from "./assets/alpinejs@3.14.7.js";
+            import Blackberry from "./src/blackberry.js";
+
+            window.Alpine = Alpine;
+            window.Blackberry = Blackberry;
+
+            Alpine.plugin(Blackberry.alpinePlugin());
+            Alpine.start();
+
+            const lenis = new Lenis({
+                autoRaf: true,
+                lerp: 0.5,
+            });
+        </script>
+
+        <!-- 	Styles	-->
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+            @import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
+
+            :root {
+                --blackberry-dark: #1a1b26;
+                --blackberry-main: #2e3440;
+                --blackberry-light: #434c5e;
+                --blackberry-accent: #88c0d0;
+                --blackberry-text: #d8dee9;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                background-color: var(--blackberry-dark);
+                background-image: linear-gradient(
+                        var(--blackberry-light) 1px,
+                        transparent 1px
+                    ),
+                    linear-gradient(
+                        90deg,
+                        var(--blackberry-light) 1px,
+                        transparent 1px
+                    );
+                background-size: 20px 20px;
+                background-position: -1px -1px;
+                color: var(--blackberry-text);
+                font-family: "VT323", monospace;
+                padding: 2rem;
+                position: relative;
+
+                @media (max-width: 768px) {
+                    padding: 1rem;
+                }
+            }
+
+            body::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: var(--blackberry-main);
+                opacity: 0.7;
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            .container {
+                max-width: 1024px;
+                margin: 0 auto;
+                padding: 2rem;
+                background-color: var(--blackberry-main);
+                border: 4px solid var(--blackberry-light);
+                box-shadow: 8px 8px 0 var(--blackberry-dark);
+                position: relative;
+                z-index: 1;
+
+                @media (max-width: 768px) {
+                    padding: 1rem;
+                }
+            }
+
+            h1.title,
+            h2.title,
+            h3.title {
+                color: var(--blackberry-accent);
+                margin: 2rem 0 1rem;
+                text-shadow: 2px 2px 0 var(--blackberry-dark);
+            }
+
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6 {
+                font-family: "Press Start 2P", monospace;
+            }
+
+            h1.title {
+                font-size: 2rem;
+                text-align: center;
+                margin-bottom: 2rem;
+                @media (max-width: 550px) {
+                    font-size: 1.55rem;
+                }
+            }
+
+            h2.title {
+                font-size: 1.5rem;
+                /* border-bottom: 4px solid var(--blackberry-light); */
+                padding-bottom: 0.5rem;
+                @media (max-width: 550px) {
+                    font-size: 1.25rem;
+                }
+            }
+
+            h3.title {
+                font-size: 1rem;
+                margin-top: 2rem;
+            }
+
+            .text {
+                margin: 1rem 0;
+                font-family: "VT323", monospace;
+                font-size: 1.65rem;
+                line-height: 100%;
+            }
+
+            .header-logo-container {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                margin: 2rem 0;
+
+                @media (max-width: 768px) {
+                    /* hide 2 */
+                    & img:nth-child(2) {
+                        display: none;
+                    }
+                }
+            }
+
+            .header-logo {
+                display: block;
+                margin: 0 auto;
+                width: 100px;
+                filter: drop-shadow(2px 2px 0 var(--blackberry-dark));
+            }
+
+            .feature-list {
+                margin: 1rem 0;
+                padding-left: 1rem;
+            }
+
+            .feature-list li {
+                margin: 0.5rem 0;
+                list-style: none;
+                position: relative;
+                padding-left: 1.5rem;
+                font-size: 1.25rem;
+            }
+
+            .feature-list li::before {
+                content: "►";
+                position: absolute;
+                left: 0;
+                color: var(--blackberry-accent);
+            }
+
+            .note {
+                background: var(--blackberry-light);
+                padding: 0.5rem;
+                margin: 1rem 0;
+                border-left: 4px solid var(--blackberry-accent);
+                font-size: 1.25rem;
+                font-family: "VT323", monospace;
+            }
+
+            .text-center {
+                text-align: center;
+            }
+
+            spacer-line {
+                display: block;
+                height: 4px;
+                width: 100%;
+                margin-top: 3rem;
+                margin-bottom: 3rem;
+                background: var(--blackberry-light);
+            }
+
+            spacer-berries {
+                display: block;
+                height: 4px;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body blackberry-cloak>
+
+        <!-- ##Counter Component -->
+
+        <template blackberry="counter-component" attributes="initial">
+            <button
+                @click="increment"
+                x-text="`the count is ${count}`"
+            ></button>
+            <script>
+                $state.count = Number($attributes.initial ?? 0);
+                $state.increment = () => $state.count++;
+                $effect(() => console.log("count changed", $state.count));
+            </script>
+            <style>
+                button {
+                    background: var(--blackberry-light);
+                    padding: 4px 8px;
+                    border: 2px solid var(--blackberry-accent);
+                    font-family: "VT323", monospace;
+                    font-size: 2rem;
+                    color: var(--blackberry-text);
+                    box-shadow: 4px 4px 0 var(--blackberry-dark);
+                    transition: all 90ms;
+
+                    &:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 6px 6px 0 var(--blackberry-dark);
+                    }
+
+                    &:active {
+                        transform: translateY(2px);
+                        box-shadow: 4px 4px 0 var(--blackberry-dark);
+                    }
+                }
+            </style>
+        </template>
+
+        <!-- ##Spacer Line Component -->
+
+        <template blackberry="x-note">
+            <div>
+                <p>
+                    💡 <span><slot></slot></span>
+                </p>
+            </div>
+            <style>
+                div {
+                    background: var(--blackberry-light);
+                    padding: 2px 0.5rem;
+                    margin: 1rem 0;
+                    border-left: 4px solid var(--blackberry-accent);
+                    font-size: 1.25rem;
+                    font-family: "VT323", monospace;
+                }
+            </style>
+        </template>
+
+        <!-- ##Inline Code Component -->
+
+        <template blackberry="inline-code">
+            <code><slot></slot></code>
+            <style>
+                code {
+                    background: var(--blackberry-light);
+                    padding: 2px 0.5rem;
+                    margin: 1rem 0;
+                    background-color: var(--blackberry-accent);
+                    color: var(--blackberry-dark);
+                    border-radius: 0.25rem;
+                    font-size: 1.25rem;
+                    font-family: "VT323", monospace;
+                }
+            </style>
+        </template>
+
+        <!-- ##Code Block Component -->
+
+        <template blackberry="code-block" attributes="language, content">
+            <script>
+                const content = $attributes.content
+                    .split("\n")
+                if(content.length > 1) {
+                    content.shift()
+                }
+                let indent = 0;
+                for (let i = 0; i < content[0].length; i++) {
+                    if (content[0][i] === "\t" || content[0][i] === " ") indent++;
+                    else break;
+                }
+                for (let i = 0; i < content.length; i++) {
+                    let char = 0;
+                    let str = content[i];
+                    while ((str[char] === "\t" || str[char] === " ") && char < indent) {
+                        content[i] = content[i].slice(1);
+                        char++;
+                    }
+                }
+                $state.className = `language-` + $attributes.language;
+                $state.content = Prism.highlight(content.join("\n").trim(), Prism.languages[$attributes.language], $attributes.language);
+            </script>
+            <pre><code :class="className" x-init="$el.innerHTML = content"></code></pre>
+            <style>
+                pre[class*="language-"],
+                code[class*="language-"] {
+                    color: #d8dee9;
+                    font-size: 1em;
+                    text-shadow: none;
+                    font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono",
+                        monospace;
+                    direction: ltr;
+                    text-align: left;
+                    white-space: pre;
+                    word-spacing: normal;
+                    word-break: normal;
+                    line-height: 1.5;
+                    -moz-tab-size: 4;
+                    -o-tab-size: 4;
+                    tab-size: 4;
+                    -webkit-hyphens: none;
+                    -moz-hyphens: none;
+                    -ms-hyphens: none;
+                    hyphens: none;
+                }
+                pre[class*="language-"]::selection,
+                code[class*="language-"]::selection,
+                pre[class*="language-"]::mozselection,
+                code[class*="language-"]::mozselection {
+                    text-shadow: none;
+                    background: none;
+                }
+                @media print {
+                    pre[class*="language-"],
+                    code[class*="language-"] {
+                        text-shadow: none;
+                    }
+                }
+                pre[class*="language-"] {
+                    padding: 1em;
+                    margin: 0.5em 0;
+                    overflow: auto;
+                    background: #2e3440;
+                }
+                :not(pre) > code[class*="language-"] {
+                    padding: 0.1em;
+                    border-radius: 0.3em;
+                    color: #d8dee9;
+                    background: #2e3440;
+                }
+                /*********************************************************
+                * Tokens
+                */
+                .namespace {
+                    opacity: 0.7;
+                }
+                .token.comment,
+                .token.prolog,
+                .token.doctype,
+                .token.cdata {
+                    color: #606e87;
+                }
+                .token.punctuation {
+                    color: #81a1c1;
+                }
+                .token.property,
+                .token.tag,
+                .token.boolean,
+                .token.number,
+                .token.constant,
+                .token.symbol,
+                .token.deleted {
+                    color: var(--blackberry-text);
+                }
+                .token.selector,
+                .token.attr-name,
+                .token.string,
+                .token.char,
+                .token.builtin,
+                .token.inserted {
+                    color: var(--blackberry-accent);
+                }
+                .token.operator,
+                .token.entity,
+                .token.url,
+                .language-css .token.string,
+                .style .token.string {
+                    color: #80a2c1;
+                    background: none;
+                }
+                .token.atrule,
+                .token.attr-value,
+                .token.keyword {
+                    color: #81a1c1;
+                }
+                .token.function {
+                    color: #8fbcbc;
+                }
+                .token.regex,
+                .token.important,
+                .token.variable {
+                    color: #ee9900;
+                }
+                .token.important,
+                .token.bold {
+                    font-weight: bold;
+                }
+                .token.italic {
+                    font-style: italic;
+                }
+                .token.entity {
+                    cursor: help;
+                }
+                /*********************************************************
+                * Line highlighting
+                */
+                pre[data-line] {
+                    position: relative;
+                }
+                pre[class*="language-"] > code[class*="language-"] {
+                    position: relative;
+                    z-index: 1;
+                }
+                .line-highlight {
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    padding: inherit 0;
+                    margin-top: 1em;
+                    background: #3b4251;
+                    box-shadow: inset 5px 0 0 #d8dee9;
+                    z-index: 0;
+                    pointer-events: none;
+                    line-height: inherit;
+                    white-space: pre;
+                }
+
+                /* Custom */
+                pre {
+                    background: var(--blackberry-dark) !important;
+                    border: 2px solid var(--blackberry-light);
+                    overflow-x: auto;
+                    font-family: monospace;
+                    font-size: 1rem;
+                    padding: 1rem;
+                }
+            </style>
+        </template>
+
+        <!-- ##Page Content -->
+
+        <div class="container">
+
+            <!-- ##Header -->
+
+            <h1 class="title">Blackberry.js</h1>
+
+            <div class="header-logo-container">
+                <img class="header-logo" src="/assets/blackberry.png" />
+                <img class="header-logo" src="/assets/blackberry.png" />
+                <img class="header-logo" src="/assets/blackberry.png" />
+                <img class="header-logo" src="/assets/blackberry.png" />
+                <img class="header-logo" src="/assets/blackberry.png" />
+            </div>
+
+            <p class="text text-center">
+                A zero-build framework for the artisanal web.
+            </p>
+
+            <spacer-line></spacer-line>
+
+            <!-- ##Overview -->
+
+            <h2 class="title">Overview</h2>
+            <p class="text">
+                Blackberry.js lets you create reusable components using
+                Alpine.js with scoped styles and a composable component model,
+                without a build step or additional dependencies.
+            </p>
+
+            <!-- Example -->
+
+            <code-block language="html" content='
+                <template blackberry="counter-component" attributes="initial">
+
+                    <button @click="increment" x-text="`the count is ${count}`"></button>
+
+                    <script>
+                        $state.count = Number($attributes.initial ?? 0);
+                        $state.increment = () => $state.count++;
+                        $effect(() => console.log("count changed", $state.count));
+                    </script>
+
+                    <style>
+                        button { ... }
+                    </style>
+
+                </template>
+            '></code-block>
+
+            <code-block language="html" content='
+                <counter-component initial="3"></counter-component>
+            '></code-block>
+
+            <counter-component initial="3"></counter-component>
+
+            <p class="text">
+                Blackberry.js is inspired by
+                <a href="https://strawberry.quest" target="_blank">Strawberry.js</a>,
+                and is designed to be used as a lightweight html-first
+                alternative to frameworks like Vue and Svelte, but works without
+                requiring build tooling or a complex dependency tree.
+            </p>
+
+            <spacer-line></spacer-line>
+
+            <!-- ##SETUP -->
+
+            <h2 class="title">Setup</h2>
+            <p class="text">
+                The ideal way of using Blackberry.js is by copying the source
+                code into your project directory. You can either use the source
+                code, minified source, or a version that is bundled with
+                alpine.js and automatically initalizes both.
+            </p>
+
+            <h3 class="title">Auto Initalization</h3>
+            <code-block language="html" content='
+                <script type="module" src="/dist/blackberry.bundle.js"></script>
+            '></code-block>
+
+            <h3 class="title">Manual Initalization</h3>
+            <code-block language="html" content='
+                <script type="module">
+                    import Alpine from "/dist/alpine.js"
+                    import Blackberry from "/dist/blackberry.js"
+
+                    window.Alpine = Alpine
+                    window.Blackberry = Blackberry
+
+                    Alpine.plugin(Blackberry.alpinePlugin())
+                    Alpine.start()
+                </script>
+            '></code-block>
+
+            <spacer-line></spacer-line>
+
+            <!-- ##GUIDE -->
+
+            <h2 class="title">Guide</h2>
+
+            <p class="text">
+
+            </p>
+
+        </div>
+    </body>
 </html>
