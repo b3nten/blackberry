@@ -1,11 +1,11 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE HTML>
+<html lang="en" >
     <head>
         <style>body {transition: opacity .25s .3s;} [blackberry-cloak] {opacity: 0;}</style>
 
         <!--	Deps	-->
         <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css">
+        <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css" crossorigin="anonymous"">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual></script>
 
         <!--	Meta	-->
@@ -13,13 +13,12 @@
 
         <!--	Init	-->
         <script type="module">
-            import Alpine from "./assets/alpinejs@3.14.7.js";
-            import Blackberry from "./src/blackberry.js";
+            import Alpine from "/assets/alpinejs@3.14.8.js";
+            import Blackberry from "./dist/blackberry.alpine@0.0.1.js";
 
             window.Alpine = Alpine;
-            window.Blackberry = Blackberry;
 
-            Alpine.plugin(Blackberry.alpinePlugin());
+            Alpine.plugin(Blackberry.alpinePlugin);
             Alpine.start();
 
             const lenis = new Lenis({
@@ -217,6 +216,9 @@
         </style>
     </head>
     <body blackberry-cloak>
+
+        <inline-h></inline-h>
+        <jsx-test name="pooper"></jsx-test>
 
         <!-- ##Counter Component -->
 
