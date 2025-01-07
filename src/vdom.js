@@ -1,11 +1,16 @@
 let SSR_NODE = 1, TEXT_NODE = 3, EMPTY_OBJ = {}, EMPTY_ARR = [], SVG_NS = "http://www.w3.org/2000/svg"
 
-let listener = (event) => this.events[event.type](event)
+let listener = function (event) {
+  // @ts-ignore
+  this.events[event.type](event)
+}
 
 let getKey = (vdom) => (vdom == null ? vdom : vdom.key)
 
 let patchProperty = (node, key, oldValue, newValue, isSvg) => {
   if (key === "key") {
+  } else if (key === "unsafe-inner-html") {
+    node.__unsafe_innerHtml = newValue
   } else if (key === "ref" && typeof newValue === "object") {
     newValue.value = node
   } else if (key[0] === "o" && key[1] === "n") {
@@ -30,7 +35,11 @@ let createNode = (vdom, isSvg) => {
   let props = vdom.props;
   let node = vdom.type === TEXT_NODE ? document.createTextNode(vdom.tag) : (isSvg = isSvg || vdom.tag === "svg") ? document.createElementNS(SVG_NS, vdom.tag, { is: props.is }) : document.createElement(vdom.tag, { is: props.is })
   for (var k in props) patchProperty(node, k, null, props[k], isSvg)
-  for (var i = 0; i < vdom.children.length; i++) node.appendChild(createNode((vdom.children[i] = vdomify(vdom.children[i])), isSvg))
+  if(node.__unsafe_innerHtml) {
+    node.innerHTML = node.__unsafe_innerHtml
+  } else {
+    for (var i = 0; i < vdom.children.length; i++) node.appendChild(createNode((vdom.children[i] = vdomify(vdom.children[i])), isSvg))
+  }
   return (vdom.node = node)
 }
 
@@ -50,7 +59,7 @@ var patchNode = (parent, node, oldVNode, newVNode, isSvg) => {
     if (oldVNode != null) {
       parent.removeChild(oldVNode.node)
     }
-  } else {
+  } else diff: {
     var tmpVKid,
       oldVKid,
       oldKey,
@@ -70,6 +79,11 @@ var patchNode = (parent, node, oldVNode, newVNode, isSvg) => {
       if ((i === "value" || i === "selected" || i === "checked" ? node[i] : oldProps[i]) !== newProps[i]) {
         patchProperty(node, i, oldProps[i], newProps[i], isSvg)
       }
+    }
+
+    if(node.__unsafe_innerHtml) {
+      node.innerHTML = node.__unsafe_innerHtml
+      break diff;
     }
 
     while (newHead <= newTail && oldHead <= oldTail) {
@@ -193,7 +207,6 @@ var patchNode = (parent, node, oldVNode, newVNode, isSvg) => {
       }
     }
   }
-
   return (newVNode.node = node)
 }
 

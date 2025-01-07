@@ -1,3 +1,5 @@
+import * as reactivity from "../assets/reactivity@3.5.13.js"
+export * from "../assets/reactivity@3.5.13.js"
 import * as superfine from "./vdom.js";
 
 Symbol.metadata ??= Symbol('metadata');
@@ -28,73 +30,83 @@ function addGlobalStylesToShadowRoot(shadowRoot) {
   );
 }
 
-export function CreateBlackberryElement(reactivity) {
-  return class BlackberryElement extends HTMLElement {
+export class BlackberryElement extends HTMLElement {
 
-    static styles = "";
+  static styles = "";
 
-    static useGlobalStyles = false;
+  static useGlobalStyles = false;
 
-    static define(name) {
-      if(!customElements.get(name)) {
-        customElements.define(name, this);
-      }
+  static define(name) {
+    if (!customElements.get(name)) {
+      customElements.define(name, this);
+    }
+  }
+
+  static get observedAttributes() {
+    return Array.from(observedAttributes.get(this[Symbol.metadata]) ?? []);
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue === newValue) return;
+    this.attrs[name] = newValue;
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(this.constructor.styles);
+    this.shadowRoot.adoptedStyleSheets = [sheet];
+
+    if (this.constructor.useGlobalStyles) {
+      addGlobalStylesToShadowRoot(this.shadowRoot);
     }
 
-    static get observedAttributes() {
-      return Array.from(observedAttributes.get(this[Symbol.metadata]) ?? []);
-    }
+    this.rootEL = document.createElement("element-root");
+    this.shadowRoot.appendChild(this.rootEL);
+  }
 
-    attributeChangedCallback(name, oldValue, newValue) {
-      if (oldValue === newValue) return;
-      this.attrs[name] = newValue;
-    }
-
-    constructor() {
-      super();
-      this.attachShadow({ mode: "open" });
-
-      const sheet = new CSSStyleSheet();
-      sheet.replaceSync(this.constructor.styles);
-      this.shadowRoot.adoptedStyleSheets = [sheet];
-
-      if (this.constructor.useGlobalStyles) {
-        addGlobalStylesToShadowRoot(this.shadowRoot);
-      }
-
-      this.rootEL = document.createElement("element-root");
-      this.shadowRoot.appendChild(this.rootEL);
-    }
-
-    connectedCallback() {
-      const self = this;
-      const root = (child) => superfine.h("element-root", {}, child);
+  connectedCallback() {
+    const self = this;
+    const root = (child) => superfine.h("element-root", {}, child);
+    this.rootEffect = reactivity.effectScope()
+    this.rootEffect.run(() => {
       this.onMount?.()
       reactivity.effect(() => {
         superfine.patch(this.rootEL, root(this.render.call(self)), { host: this });
       })
       this.onMounted?.();
-    }
-
-    disconnectedCallback() {
-      this.onUnmount?.();
-    }
-
-    render() {
-      throw new Error("You must implement the render method in your custom element.");
-    }
-
-    attrs = reactivity.reactive({});
-
-    // stored @state values
-    _decoratedStates = reactivity.reactive({});
+    })
   }
+
+  disconnectedCallback() {
+    this.rootEffect.run(() => {
+      this.onUnmount?.();
+    })
+    this.rootEffect.stop();
+  }
+
+  render() {
+    throw new Error("You must implement the render method in your custom element.");
+  }
+
+  attrs = reactivity.reactive({});
+
+  // stored @state values
+  _decoratedStates = reactivity.reactive({});
 }
 
+export const Component = BlackberryElement;
+
 export const css = String.raw
+
 export const h = superfine.h;
+
 export const text = superfine.text;
+
 export const Fragment = superfine.Fragment;
+
 export const elementFactory = superfine.elementFactory;
 
 export function state(_, { kind, name, }) {
@@ -119,7 +131,7 @@ export function attribute(value, { kind, name, metadata }) {
 
   const attrName = toKebabCase(name);
 
-  if(!observedAttributes.has(metadata)) observedAttributes.set(metadata, new Set());
+  if (!observedAttributes.has(metadata)) observedAttributes.set(metadata, new Set());
   observedAttributes.get(metadata).add(attrName);
 
   if (kind === "accessor") {
@@ -135,7 +147,7 @@ export function attribute(value, { kind, name, metadata }) {
         this.attrs[attrName] = initialValue;
       }
     };
-  } else if(kind === "getter") {
+  } else if (kind === "getter") {
     return function () {
       return this.attrs[attrName] ?? value();
     }
