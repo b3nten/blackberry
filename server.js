@@ -52,10 +52,15 @@ server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);
 });
 
-// Graceful shutdown
 process.on('SIGTERM', () => {
     server.close(() => {
-        console.log('Server shutdown complete');
+        process.exit(0);
+    });
+});
+
+// Also catch SIGINT just in case
+process.on('SIGINT', () => {
+    server.close(() => {
         process.exit(0);
     });
 });

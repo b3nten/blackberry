@@ -3,7 +3,7 @@ let SSR_NODE = 1, TEXT_NODE = 3, EMPTY_OBJ = {}, EMPTY_ARR = [], SVG_NS = "http:
 let listener = function (event) {
   // @ts-ignore
   this.events[event.type](event)
-}
+} // this is the host
 
 let getKey = (vdom) => (vdom == null ? vdom : vdom.key)
 
