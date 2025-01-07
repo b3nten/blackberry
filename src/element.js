@@ -74,7 +74,7 @@ export class BlackberryElement extends HTMLElement {
     this.rootEffect.run(() => {
       this.onMount?.()
       reactivity.effect(() => {
-        superfine.patch(this.rootEL, root(this.render.call(self)), { host: this });
+        superfine.render(this.rootEL, root(this.render.call(self)), { host: this });
       })
       this.onMounted?.();
     })

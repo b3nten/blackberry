@@ -1,8 +1,7 @@
 
 import { effect, reactive, effectScope } from "../assets/reactivity@3.5.13.js"
 import { Lazy, unwrap } from "./renderer.js";
-// import { h, text, patch } from "./vdom.js"
-import { h, render } from "./renderer.js"
+import { h, text, render } from "./vdom.js"
 
 const stringExpressions = new Map();
 function generateFunctionFromString(expression) {
@@ -42,7 +41,7 @@ function compileIntermediary(element, scope = {}) {
   }
 
   if (element.nodeType != 1) {
-    return new Lazy(() => element.nodeValue)
+    return new Lazy(() => text(element.nodeValue))
   }
 
   let tag = element.tagName.toLowerCase()
@@ -54,7 +53,9 @@ function compileIntermediary(element, scope = {}) {
     if (attr.nodeName[0] === ":") {
       const fn = generateFunctionFromString(attr.nodeValue)
       if(attr.nodeName === ":text") {
-        children.push(new Lazy(() => fn(scope)))
+        children.push(new Lazy(() => text(fn(scope))))
+      } else if (attr.nodeName === ":unsafe-inner-html") {
+        attributes["unsafeInnerHtml"] = new Lazy(() => fn(scope));
       } else if (attr.nodeName === ":show") {
 
       } else if (attr.nodeName === ":if") {
@@ -181,7 +182,7 @@ function constructComponentFromElement(element) {
       this.effectScope = effectScope()
       this.effectScope.run(() => {
         effect(() => {
-          patch(this.root, h("shadow-root", {}, renderIntermediaryTemplate(this.renderFn)), { host: this })
+          render(this.root, h("shadow-root", {}, renderIntermediaryTemplate(this.renderFn)), { host: this })
         })
       })
     }
