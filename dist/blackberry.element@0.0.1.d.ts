@@ -1070,10 +1070,11 @@ export declare class VNode {
 declare abstract class BlackberryElement extends HTMLElement {
 	static styles: string;
 	static useGlobalStyles: boolean;
-	static DefineElement(name: string): void;
+	static define(name: string): void;
 	attrs: Record<string, string>;
 	abstract render(): VNode;
 	onMount?(): void;
+	onMounted?(): void;
 	onUnmount?(): void;
 }
 export declare type ReactiveInput = {

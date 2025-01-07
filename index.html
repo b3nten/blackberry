@@ -25,6 +25,17 @@
                 autoRaf: true,
                 lerp: 0.5,
             });
+
+            import { compile, renderVirtual } from "/src/template.js"
+
+            setTimeout(() => {
+              const template = document.getElementById("v-compile").content.children;
+              const scope = { count: { value: 3}, increment: () => alert("WOO") };
+              let compiled = compile(Array.from(template), scope)
+              console.log(renderVirtual(compiled))
+              scope.count.value = 5;
+              console.log(renderVirtual(compiled))
+            }, 1000)
         </script>
 
         <!-- 	Styles	-->
@@ -217,8 +228,9 @@
     </head>
     <body blackberry-cloak>
 
-        <inline-h></inline-h>
-        <jsx-test name="pooper"></jsx-test>
+        <template id="v-compile">
+            <button @click="increment" :text="count.value"></button>
+        </template>
 
         <!-- ##Counter Component -->
 

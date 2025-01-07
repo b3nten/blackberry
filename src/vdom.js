@@ -1,26 +1,18 @@
-var SSR_NODE = 1,
-  TEXT_NODE = 3,
-  EMPTY_OBJ = {},
-  EMPTY_ARR = [],
-  SVG_NS = "http://www.w3.org/2000/svg"
+let SSR_NODE = 1, TEXT_NODE = 3, EMPTY_OBJ = {}, EMPTY_ARR = [], SVG_NS = "http://www.w3.org/2000/svg"
 
-var listener = function (event) {
-  this.events[event.type](event)
-}
+let listener = (event) => this.events[event.type](event)
 
-var getKey = (vdom) => (vdom == null ? vdom : vdom.key)
+let getKey = (vdom) => (vdom == null ? vdom : vdom.key)
 
-var patchProperty = (node, key, oldValue, newValue, isSvg) => {
+let patchProperty = (node, key, oldValue, newValue, isSvg) => {
   if (key === "key") {
-    if(key === "ref" && typeof newValue === "object") {
-      newValue.value = node
-    }
+  } else if (key === "ref" && typeof newValue === "object") {
+    newValue.value = node
   } else if (key[0] === "o" && key[1] === "n") {
     key = key.toLowerCase()
     let host = renderOptions?.host ?? node
-    if (
-      !((node.events || (node.events = {}))[(key = key.slice(2))] = (e) => newValue.call(host, e))
-    ) {
+    // if(!node.events[key] = newValue ? newValue : undefined)
+    if (!((node.events || (node.events = {}))[(key = key.slice(2))] = newValue ? (e) => newValue.call(host, e) : undefined)) {
       node.removeEventListener(key, listener)
     } else if (!oldValue) {
       node.addEventListener(key, listener)
@@ -34,25 +26,11 @@ var patchProperty = (node, key, oldValue, newValue, isSvg) => {
   }
 }
 
-var createNode = (vdom, isSvg) => {
-  var props = vdom.props,
-    node =
-      vdom.type === TEXT_NODE
-        ? document.createTextNode(vdom.tag)
-        : (isSvg = isSvg || vdom.tag === "svg")
-        ? document.createElementNS(SVG_NS, vdom.tag, { is: props.is })
-        : document.createElement(vdom.tag, { is: props.is })
-
-  for (var k in props) {
-    patchProperty(node, k, null, props[k], isSvg)
-  }
-
-  for (var i = 0; i < vdom.children.length; i++) {
-    node.appendChild(
-      createNode((vdom.children[i] = vdomify(vdom.children[i])), isSvg)
-    )
-  }
-
+let createNode = (vdom, isSvg) => {
+  let props = vdom.props;
+  let node = vdom.type === TEXT_NODE ? document.createTextNode(vdom.tag) : (isSvg = isSvg || vdom.tag === "svg") ? document.createElementNS(SVG_NS, vdom.tag, { is: props.is }) : document.createElement(vdom.tag, { is: props.is })
+  for (var k in props) patchProperty(node, k, null, props[k], isSvg)
+  for (var i = 0; i < vdom.children.length; i++) node.appendChild(createNode((vdom.children[i] = vdomify(vdom.children[i])), isSvg))
   return (vdom.node = node)
 }
 
@@ -89,11 +67,7 @@ var patchNode = (parent, node, oldVNode, newVNode, isSvg) => {
     isSvg = isSvg || newVNode.tag === "svg"
 
     for (var i in { ...oldProps, ...newProps }) {
-      if (
-        (i === "value" || i === "selected" || i === "checked"
-          ? node[i]
-          : oldProps[i]) !== newProps[i]
-      ) {
+      if ((i === "value" || i === "selected" || i === "checked" ? node[i] : oldProps[i]) !== newProps[i]) {
         patchProperty(node, i, oldProps[i], newProps[i], isSvg)
       }
     }
@@ -230,12 +204,12 @@ var recycleNode = (node) =>
   node.nodeType === TEXT_NODE
     ? text(node.nodeValue, node)
     : createVNode(
-        node.nodeName.toLowerCase(),
-        EMPTY_OBJ,
-        EMPTY_ARR.map.call(node.childNodes, recycleNode),
-        SSR_NODE,
-        node
-      )
+      node.nodeName.toLowerCase(),
+      EMPTY_OBJ,
+      EMPTY_ARR.map.call(node.childNodes, recycleNode),
+      SSR_NODE,
+      node
+    )
 
 const v = Symbol.for("v-node")
 var createVNode = (tag, props, children, type, node) => ({
@@ -254,24 +228,16 @@ export var text = (value, node) =>
 export var _h = (tag, props, children = EMPTY_ARR) =>
   createVNode(tag, props ?? {}, (Array.isArray(children) ? children : [children]))
 
-// export var h = (type, props, ...children) =>
-//   typeof type === "function"
-//     ? type(props, children)
-//     : _h(type, props || {}, children.flatMap((any) =>
-//         typeof any === "string" || typeof any === "number" ? text(any) : any
-//       )
-//     )
-
 export function h(type, props, ...children) {
-  if(props && typeof props === "object" && v in props) {
+  if (props && typeof props === "object" && v in props) {
     children.unshift(props)
     props = {};
   }
-  if(typeof props === "string" || typeof props === "number") {
+  if (typeof props === "string" || typeof props === "number") {
     children.unshift(text(props))
     props = {}
   }
-  if(typeof type === "function") return type(props, children)
+  if (typeof type === "function") return type(props, children)
   return _h(type, props || {}, children.flatMap((any) =>
     typeof any === "string" || typeof any === "number" ? text(any) : any
   ))

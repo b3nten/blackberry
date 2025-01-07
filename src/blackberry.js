@@ -1,3 +1,7 @@
+import { compile } from "./template.js";
+import { effect, reactive } from "../assets/reactivity@3.5.13.js"
+import { render } from "./vdom.js"
+
 function constructElementFromTemplate(element, alpine) {
   if (element.tagName !== "TEMPLATE" || !(typeof element.getAttribute("blackberry") === "string")) {
     return;
@@ -39,23 +43,6 @@ function constructElementFromTemplate(element, alpine) {
     script,
   );
 
-  const dataName = "blackberry_" + tagname.replace("-", "");
-
-  alpine.data(dataName, () => ({
-    init() {
-      const self = this.$root.getRootNode().host;
-
-      const $cleanup = (...fns) => void self.__blackberry_cleanupFns.push(...fns);
-      const $effect = (fn) => void self.__blackberry_effects.push(alpine.effect(fn));
-
-      try {
-        setup(self, this, self.__blackberry_attrs, self.__blackberry_props ??= alpine.reactive({}), $cleanup, alpine.reactive, $effect);
-      } catch (e) {
-        console.error("Error in setup function of", self, this, e);
-      }
-    },
-  }));
-
   customElements.define(tagname, class extends HTMLElement {
 
     static get observedAttributes() { return attrs; }
@@ -67,26 +54,36 @@ function constructElementFromTemplate(element, alpine) {
 
     constructor() {
       super();
-
       this.attachShadow({ mode: "open" });
       this.shadowRoot.adoptedStyleSheets = sheets;
 
-      const el = document.createElement("blackberry-provider");
-      el.setAttribute("x-data", dataName);
+      const data = reactive({});
 
-      for (let x of markup.children) el.appendChild(x.cloneNode(true));
+      const cleanup = (...fns) => void this.__blackberry_cleanupFns.push(...fns);
+      const effect = (fn) => void this.__blackberry_effects.push(alpine.effect(fn));
 
-      // init tree and children
-      queueMicrotask(() => {
-        this.shadowRoot.appendChild(el);
-        alpine.initTree(this.shadowRoot.children[0]);
-      });
+      setup(
+        this,
+        data,
+        this.__blackberry_attrs,
+        this.__blackberry_props,
+        cleanup,
+        reactive,
+        effect
+      );
+
+      this.renderFn = compile(element, data)
+    }
+
+    connectedCallback() {
+      effect(() => {
+        render(this.shadowRoot, this.renderFn())
+      })
     }
 
     disconnectedCallback() {
       this.__blackberry_cleanupFns.forEach((fn) => fn());
       this.__blackberry_effects.forEach((fn) => alpine.release(fn));
-      alpine.destroyTree(this.shadowRoot.children[0]);
     }
 
     __blackberry_attrs = alpine.reactive({});
@@ -96,29 +93,9 @@ function constructElementFromTemplate(element, alpine) {
   });
 }
 
-export default function alpinePlugin(alpine) {
-
-  let startingWith = (subject, replacement) => ({ name, value }) => {
-    if (name.startsWith(subject)) name = name.replace(subject, replacement);
-    return { name, value };
-  };
-
-  alpine.mapAttributes(startingWith(".", "x-prop:"));
-
-  alpine.directive("prop", (el, { value, expression }, { effect, evaluateLater }) => {
-    let exp = evaluateLater(expression);
-    effect(() => {
-      exp((r) => {
-        el[value] = r;
-        if(el.__blackberry_props) el.__blackberry_props[value] = r;
-      });
-    });
-  });
-
+export default function initBlackberry(alpine) {
   document.querySelectorAll("template").forEach((element) => constructElementFromTemplate(element, alpine));
-
   document.body.removeAttribute("blackberry-cloak");
-
   const mutationObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
@@ -126,6 +103,5 @@ export default function alpinePlugin(alpine) {
       });
     });
   });
-
   mutationObserver.observe(document.body, { childList: true, subtree: true });
 }

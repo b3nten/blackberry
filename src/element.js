@@ -1,19 +1,45 @@
-import * as superfine from "../assets/superfine.js";
+import * as superfine from "./vdom.js";
 
 Symbol.metadata ??= Symbol('metadata');
+
+const toKebabCase = (str) => str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
+
+const observedAttributes = new Map()
+
+let globalSheets = null;
+
+function getGlobalStyleSheets() {
+  if (globalSheets === null) {
+    globalSheets = Array.from(document.styleSheets)
+      .map(x => {
+        const sheet = new CSSStyleSheet();
+        const css = Array.from(x.cssRules).map(rule => rule.cssText).join(' ');
+        sheet.replaceSync(css);
+        return sheet;
+      });
+  }
+
+  return globalSheets;
+}
+
+function addGlobalStylesToShadowRoot(shadowRoot) {
+  shadowRoot.adoptedStyleSheets.push(
+    ...getGlobalStyleSheets()
+  );
+}
 
 export function CreateBlackberryElement(reactivity) {
   return class BlackberryElement extends HTMLElement {
 
     static styles = "";
 
-    static DefineElement(name) {
+    static useGlobalStyles = false;
+
+    static define(name) {
       if(!customElements.get(name)) {
         customElements.define(name, this);
       }
     }
-
-    static useGlobalStyles = true;
 
     static get observedAttributes() {
       return Array.from(observedAttributes.get(this[Symbol.metadata]) ?? []);
@@ -43,10 +69,11 @@ export function CreateBlackberryElement(reactivity) {
     connectedCallback() {
       const self = this;
       const root = (child) => superfine.h("element-root", {}, child);
+      this.onMount?.()
       reactivity.effect(() => {
         superfine.patch(this.rootEL, root(this.render.call(self)), { host: this });
       })
-      this.onMount?.();
+      this.onMounted?.();
     }
 
     disconnectedCallback() {
@@ -64,27 +91,11 @@ export function CreateBlackberryElement(reactivity) {
   }
 }
 
-let globalSheets = null;
-
-function getGlobalStyleSheets() {
-  if (globalSheets === null) {
-    globalSheets = Array.from(document.styleSheets)
-      .map(x => {
-        const sheet = new CSSStyleSheet();
-        const css = Array.from(x.cssRules).map(rule => rule.cssText).join(' ');
-        sheet.replaceSync(css);
-        return sheet;
-      });
-  }
-
-  return globalSheets;
-}
-
-export function addGlobalStylesToShadowRoot(shadowRoot) {
-  shadowRoot.adoptedStyleSheets.push(
-    ...getGlobalStyleSheets()
-  );
-}
+export const css = String.raw
+export const h = superfine.h;
+export const text = superfine.text;
+export const Fragment = superfine.Fragment;
+export const elementFactory = superfine.elementFactory;
 
 export function state(_, { kind, name, }) {
   if (kind === "accessor") {
@@ -103,9 +114,6 @@ export function state(_, { kind, name, }) {
     throw new Error("Invalid decorator usage: @state only works on class accessors.");
   }
 }
-
-const toKebabCase = (str) => str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
-const observedAttributes = new Map()
 
 export function attribute(value, { kind, name, metadata }) {
 
@@ -135,9 +143,3 @@ export function attribute(value, { kind, name, metadata }) {
     throw new Error("Invalid decorator usage: @attr only works on class accessors and getters.");
   }
 }
-
-export const css = String.raw
-export const h = superfine.h;
-export const text = superfine.text;
-export const Fragment = superfine.Fragment;
-export const elementFactory = superfine.elementFactory;
