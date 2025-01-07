@@ -1,13 +1,12 @@
 /** @type { import("./renderer").ToArray } */
 const toArray = (a) => Array.isArray(a) ? a : [a];
 
-const nil = Symbol("nil");
+const Nothing = Symbol("nothing");
 const is_vnode = Symbol("vnode");
 
 export const isLazy = Symbol("lazy");
 export class Lazy { constructor(fn) { this.fn = fn };[isLazy] = true }
 export const unwrap = (v) => v[isLazy] ? v.fn() : v;
-
 
 /** @type {import("./renderer").VirtualNode} */
 class VirtualNode {
@@ -16,10 +15,8 @@ class VirtualNode {
     this.tag = tag;
     this.props = props;
     this.children = toArray(props.children ? props.children : children);
-    this.key = props.key;
+    this.key = String(props.key);
   }
-  element;
-  key;
 }
 
 /**
@@ -30,7 +27,9 @@ export function h(tag, propsOrVNodeOrPrimitive, ...children) {
   return new VirtualNode(tag, propsOrVNodeOrPrimitive, children);
 }
 
-export function Fragment({ children }) { return children; }
+export function Fragment({ children }) {
+  return children
+}
 
 let renderOptions = null
 function render(element, vdom, options) {
@@ -45,8 +44,12 @@ function createNode(vnode) {
   if (typeof vnode !== "object") return (vnode && document.createTextNode(String(vnode)));
   let element = vnode.element = document.createElement(vnode.tag);
   element._vnode = vnode;
-  for (let k in vnode.props) patchProperty(element, k, nil, vnode.props[k]);
-  for (let child of vnode.children) element.appendChild(createNode(child));
+  for (let k in vnode.props) patchProperty(element, k, Nothing, vnode.props[k]);
+  if(vnode.props.unsafeinnerhtml) {
+    element.innerHTML = vnode.props.unsafeinnerhtml;
+  } else {
+    for (let child of vnode.children) element.appendChild(createNode(child));
+  }
   return element;
 }
 
@@ -63,39 +66,39 @@ function patchChildren(element, children, old_children) {
     return;
   }
 
+  // element is using unsafeinnerhtml, skip children
+  if(element._vnode?.props?.unsafeinnerhtml) {
+    element.innerHTML = element._vnode?.props?.unsafeinnerhtml
+    return;
+  }
+
   let i = 0;
   // PATCH CHILDREN THAT EXIST
   for (; i < Math.min(old_children.length, children.length); i++) {
     let old_child = old_children[i];
     let child = children[i];
-    let keyedElement;
-
-    if(child.key) {
-      console.log(
-        child.key,
-      )
-    }
+    let keyed_vnode;
 
     if (typeof old_child !== "object") {
       if (typeof child !== "object" && old_child !== child) {
         element.childNodes[i].nodeValue = child;
       } else {
-        if (child.key && (keyedElement = old_children.find((c) => c.key === child.key && c.tag === child.tag))) {
-          swap(element.childNodes[i], keyedElement.element);
-          child.element = element.childNodes[i];
-          element.childNodes[i]._vnode = child;
-          for(let k in child.props) patchProperty(element.childNodes[i], k, old_child.props[k], child.props[k]);
-          patchChildren(element.childNodes[i], child.children, old_child.children);
+        if (child.key && (keyed_vnode = old_children.find((c) => c.key === child.key && c.tag === child.tag))) {
+          swap(element.childNodes[i], keyed_vnode.element);
+          child.element = keyed_vnode.element;
+          keyed_vnode.element._vnode = child;
+          for(let k in child.props) patchProperty(element.childNodes[i], k, keyed_vnode.props[k], child.props[k]);
+          patchChildren(element.childNodes[i], child.children, keyed_vnode.children);
         } else {
           element.replaceChild(createNode(child), element.childNodes[i]);
         }
       }
-    } else if (child.key && (keyedElement = old_children.find((c) => c.key === child.key && c.tag === child.tag))) {
-      swap(element.childNodes[i], keyedElement.element);
-      child.element = element.childNodes[i];
-      element.childNodes[i]._vnode = child;
-      for(let k in child.props) patchProperty(element.childNodes[i], k, old_child.props[k], child.props[k]);
-      patchChildren(element.childNodes[i], child.children, old_child.children);
+    } else if (child.key && (keyed_vnode = old_children.find((c) => c.key === child.key && c.tag === child.tag))) {
+      swap(element.childNodes[i], keyed_vnode.element);
+      child.element = keyed_vnode.element
+      keyed_vnode.element._vnode = child;
+      for(let k in child.props) patchProperty(keyed_vnode.element, k, keyed_vnode.props[k], child.props[k]);
+      patchChildren(keyed_vnode.element, child.children, keyed_vnode.children);
     } else if (child.tag === old_child.tag) {
       for(let k in child.props) patchProperty(element.childNodes[i], k, old_child.props[k], child.props[k]);
       patchChildren(element.childNodes[i], child.children, old_child.children);
@@ -121,7 +124,8 @@ function patchChildren(element, children, old_children) {
 
 let listener = (e) => e.currentTarget.events[e.type](e);
 function patchProperty(element, key, oldValue, newValue) {
-  if (key === "key") {
+  key = key.toLowerCase();
+  if (key === "key" || key === "unsafeinnerhtml") {
   } else if (key === "ref" && typeof newValue === "object") {
     newValue.current = element;
   } else if (key[0] === "o" && key[1] === "n") {
@@ -131,10 +135,38 @@ function patchProperty(element, key, oldValue, newValue) {
     } else if (!oldValue) {
       element.addEventListener(key, listener);
     }
-  } else if ((newValue !== oldValue) || oldValue === nil) {
+  } else if ((newValue !== oldValue) || oldValue === Nothing) {
     if(key in element) {
       element[key] = newValue;
     }
-    element.setAttribute(key, String(newValue));
+    if(newValue === null || typeof newValue === "undefined") {
+      element.removeAttribute(key)
+    } else {
+      element.setAttribute(key, String(newValue));
+    }
   }
+}
+
+
+export async function test() {
+  let sleep = (ms) => new Promise(r => setTimeout(r, ms))
+  await sleep(500)
+  const root = document.getElementById("test")
+
+  let a = [
+    h("div", { key: "a", foo: "bar", onclick: () => alert("lol") }, "A"),
+    h("div", { key: "b" }, "B"),
+  ]
+
+  let b = [
+    h("div", { }, "B"),
+    h("div", { key: "a", foo: null, unsafeinnerhtml: "nah" },
+      h("p", {}, "cool!")
+    ),
+  ]
+
+  render(root, a)
+  await sleep(2000)
+  render(root, b)
+
 }

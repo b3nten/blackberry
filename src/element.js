@@ -4,7 +4,6 @@ import * as superfine from "./vdom.js";
 
 Symbol.metadata ??= Symbol('metadata');
 
-
 const toKebabCase = (str) => str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
 
 const observedAttributes = new Map()

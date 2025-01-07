@@ -21,6 +21,9 @@
                 autoRaf: true,
                 lerp: 0.5,
             });
+
+            import { test } from  "/src/renderer.js"
+            test();
         </script>
 
         <!-- 	Styles	-->
@@ -211,7 +214,10 @@
             }
         </style>
     </head>
-    <body blackberry-cloak>
+    <body>
+
+        <div id="test"></div>
+
         <!-- ##Counter Component -->
 
         <template blackberry="counter-component" attributes="initial">

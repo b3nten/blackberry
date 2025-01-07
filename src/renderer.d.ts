@@ -4,6 +4,8 @@ export interface VirtualNode {
   tag: string
   props?: Record<string, any>
   children: VirtualNode[]
+  key?: string
+  element?: Element
 }
 
 export interface VirtualTextNode {

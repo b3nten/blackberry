@@ -1,7 +1,8 @@
 
 import { effect, reactive, effectScope } from "../assets/reactivity@3.5.13.js"
 import { Lazy, unwrap } from "./renderer.js";
-import { h, text, patch } from "./vdom.js"
+// import { h, text, patch } from "./vdom.js"
+import { h, render } from "./renderer.js"
 
 const stringExpressions = new Map();
 function generateFunctionFromString(expression) {
@@ -41,7 +42,7 @@ function compileIntermediary(element, scope = {}) {
   }
 
   if (element.nodeType != 1) {
-    return new Lazy(() => text(element.nodeValue))
+    return new Lazy(() => element.nodeValue)
   }
 
   let tag = element.tagName.toLowerCase()
@@ -53,7 +54,13 @@ function compileIntermediary(element, scope = {}) {
     if (attr.nodeName[0] === ":") {
       const fn = generateFunctionFromString(attr.nodeValue)
       if(attr.nodeName === ":text") {
-        children.push(new Lazy(() => text(fn(scope))))
+        children.push(new Lazy(() => fn(scope)))
+      } else if (attr.nodeName === ":show") {
+
+      } else if (attr.nodeName === ":if") {
+
+      } else if (attr.nodeName === ":each") {
+
       } else {
         attributes[attr.nodeName.slice(1)] = new Lazy(() => fn(scope))
       }
