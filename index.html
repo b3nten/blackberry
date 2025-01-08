@@ -1,6 +1,10 @@
 <!DOCTYPE HTML>
-<html lang="en" >
+<html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Blackberry.js - a zero-build framework for the artisanal web">
+
         <style>body {transition: opacity .25s .3s;} [blackberry-cloak] {opacity: 0;}</style>
 
         <!--	Deps	-->
@@ -13,17 +17,14 @@
 
         <!--	Init	-->
         <script type="module">
-            import * as Blackberry from "/dist/blackberry@0.0.1.js";
+            import { start } from "/dist/blackberry@0.0.1.js";
 
-            Blackberry.start();
+            start();
 
             const lenis = new Lenis({
                 autoRaf: true,
                 lerp: 0.5,
             });
-
-            import { test } from  "/src/renderer.js"
-            test();
         </script>
 
         <!-- 	Styles	-->

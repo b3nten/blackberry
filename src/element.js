@@ -1,5 +1,5 @@
 import * as reactivity from "../assets/reactivity@3.5.13.js"
-export * from "../assets/reactivity@3.5.13.js"
+export { reactive, ref, effect, computed } from "../assets/reactivity@3.5.13.js"
 import * as superfine from "./vdom.js";
 
 Symbol.metadata ??= Symbol('metadata');
@@ -63,28 +63,25 @@ export class BlackberryElement extends HTMLElement {
       addGlobalStylesToShadowRoot(this.shadowRoot);
     }
 
-    this.rootEL = document.createElement("element-root");
-    this.shadowRoot.appendChild(this.rootEL);
+    this.rootEffectScope = reactivity.effectScope()
   }
 
   connectedCallback() {
     const self = this;
-    const root = (child) => superfine.h("element-root", {}, child);
-    this.rootEffect = reactivity.effectScope()
-    this.rootEffect.run(() => {
+    this.rootEffectScope.run(() => {
       this.onMount?.()
       reactivity.effect(() => {
-        superfine.render(this.rootEL, root(this.render.call(self)), { host: this });
+        superfine.render(this.shadowRoot, this.render.call(self), { host: this });
       })
       this.onMounted?.();
     })
   }
 
   disconnectedCallback() {
-    this.rootEffect.run(() => {
+    this.rootEffectScope.run(() => {
       this.onUnmount?.();
     })
-    this.rootEffect.stop();
+    this.rootEffectScope.stop();
   }
 
   render() {
@@ -109,49 +106,57 @@ export const Fragment = superfine.Fragment;
 
 export const elementFactory = superfine.elementFactory;
 
-export function state(_, { kind, name, }) {
-  if (kind === "accessor") {
-    return {
-      get() {
-        return this._decoratedStates[name];
-      },
-      set(val) {
-        this._decoratedStates[name] = val;
-      },
-      init(initialValue) {
-        this._decoratedStates[name] = initialValue;
-      }
-    };
-  } else {
-    throw new Error("Invalid decorator usage: @state only works on class accessors.");
+export function state() {
+  return function (_, { kind, name }) {
+    if (kind === "accessor") {
+      return {
+        get() {
+          return this._decoratedStates[name];
+        },
+        set(val) {
+          this._decoratedStates[name] = val;
+        },
+        init(initialValue) {
+          this._decoratedStates[name] = initialValue;
+        }
+      };
+    } else {
+      throw new Error("Invalid decorator usage: @state only works on class accessors.");
+    }
   }
 }
 
-export function attribute(value, { kind, name, metadata }) {
+export function attribute(overriddenName) {
+  return function (value, { kind, name, metadata }) {
+    const attrName = overriddenName ?? name;
+    if (!observedAttributes.has(metadata)) observedAttributes.set(metadata, new Set());
+    observedAttributes.get(metadata).add(attrName);
 
-  const attrName = toKebabCase(name);
-
-  if (!observedAttributes.has(metadata)) observedAttributes.set(metadata, new Set());
-  observedAttributes.get(metadata).add(attrName);
-
-  if (kind === "accessor") {
-    return {
-      get() {
-        return this.attrs[attrName];
-      },
-      set(val) {
-        this.attrs[attrName] = val;
-        this.setAttribute(attrName, String(val));
-      },
-      init(initialValue) {
-        this.attrs[attrName] = initialValue;
+    if (kind === "accessor") {
+      return {
+        get() {
+          return this.attrs[attrName];
+        },
+        set(val) {
+          this.attrs[attrName] = val;
+          this.setAttribute(attrName, String(val));
+        },
+        init(initialValue) {
+          this.attrs[attrName] = initialValue;
+        }
+      };
+    } else if (kind === "getter") {
+      return function () {
+        return this.attrs[attrName] ?? value();
       }
-    };
-  } else if (kind === "getter") {
-    return function () {
-      return this.attrs[attrName] ?? value();
+    } else {
+      throw new Error("Invalid decorator usage: @attr only works on class accessors and getters.");
     }
-  } else {
-    throw new Error("Invalid decorator usage: @attr only works on class accessors and getters.");
+  }
+}
+
+export function component(name) {
+  return function (target) {
+    target.define(name);
   }
 }

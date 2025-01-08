@@ -874,28 +874,6 @@ function A(e, t = 1 / 0, n) {
   return e;
 }
 
-// src/renderer.js
-var toArray = (a) => Array.isArray(a) ? a : [a];
-var Nothing = Symbol("nothing");
-var is_vnode = Symbol("vnode");
-var isLazy = Symbol("lazy");
-var Lazy = class {
-  constructor(fn2) {
-    this.fn = fn2;
-  }
-  [isLazy] = true;
-};
-var unwrap = (v2) => v2[isLazy] ? v2.fn() : v2;
-var VirtualNode = class {
-  [is_vnode] = true;
-  constructor(tag, props, children) {
-    this.tag = tag;
-    this.props = props;
-    this.children = toArray(props.children ? props.children : children);
-    this.key = String(props.key);
-  }
-};
-
 // src/vdom.js
 var SSR_NODE = 1;
 var TEXT_NODE = 3;
@@ -903,12 +881,12 @@ var EMPTY_OBJ = {};
 var EMPTY_ARR = [];
 var SVG_NS = "http://www.w3.org/2000/svg";
 var renderContext = null;
-var VirtualNode2 = class {
+var VirtualNode = class {
   constructor(tag, props, children, type, node) {
     this.tag = tag;
     this.props = props;
     this.key = props.key;
-    this.children = props.children ?? children;
+    this.children = ensureArray(props.children ?? children);
     this.type = type;
     this.node = node;
   }
@@ -916,9 +894,10 @@ var VirtualNode2 = class {
 function listenerDelegate(event) {
   this.events[event.type](event);
 }
+var ensureArray = (x) => Array.isArray(x) ? x : [x];
 var isStrNum = (x) => typeof x === "string" || typeof x === "number";
 var getKey = (vdom) => vdom == null ? vdom : vdom.key;
-function patchProperty(node, key, oldValue, newValue, isSvg2) {
+function patchProperty(node, key, oldValue, newValue, isSvg) {
   if (key === "key" || key === "unsafeInnerHtml") {
   } else if (key === "ref" && typeof newValue === "object") {
     newValue.value = node;
@@ -929,7 +908,7 @@ function patchProperty(node, key, oldValue, newValue, isSvg2) {
     } else if (!oldValue) {
       node.addEventListener(key, listenerDelegate);
     }
-  } else if (!isSvg2 && key !== "list" && key !== "form" && key in node) {
+  } else if (!isSvg && key !== "list" && key !== "form" && key in node) {
     node[key] = newValue == null ? "" : newValue;
   } else if (newValue == null || newValue === false) {
     node.removeAttribute(key);
@@ -937,193 +916,246 @@ function patchProperty(node, key, oldValue, newValue, isSvg2) {
     node.setAttribute(key, newValue);
   }
 }
-function createNode(vdom, isSvg2) {
-  let props = vdom.props, node = vdom.type === TEXT_NODE ? document.createTextNode(vdom.tag) : (isSvg2 = isSvg2 || vdom.tag === "svg") ? document.createElementNS(SVG_NS, vdom.tag, { is: props.is }) : document.createElement(vdom.tag, { is: props.is });
+function createNode(vdom, isSvg) {
+  while (typeof vdom.tag === "function") {
+    vdom = vdom.tag(vdom.props, vdom.children);
+  }
+  let props = vdom.props, node = vdom.type === TEXT_NODE ? document.createTextNode(vdom.tag) : (isSvg = isSvg || vdom.tag === "svg") ? document.createElementNS(SVG_NS, vdom.tag, { is: props.is }) : document.createElement(vdom.tag, { is: props.is });
   for (let k2 in props) {
-    patchProperty(node, k2, null, props[k2], isSvg2);
+    patchProperty(node, k2, null, props[k2], isSvg);
   }
   if (props.unsafeInnerHtml) {
     node.innerHTML = props.unsafeInnerHtml;
   } else {
     for (let i = 0; i < vdom.children.length; i++) {
+      if (!vdom.children[i]) continue;
+      while (typeof vdom.children[i].tag === "function") {
+        vdom.children[i] = vdom.children[i].tag(vdom.children[i].props, vdom.children[i].children);
+      }
+    }
+    for (let i = 0; i < vdom.children.length; i++) {
       node.appendChild(
-        createNode(vdom.children[i] = vdomify(vdom.children[i]), isSvg2)
+        createNode(vdom.children[i] = vdomify(vdom.children[i]), isSvg)
       );
     }
+    node._vchildren = vdom.children;
   }
   return vdom.node = node;
 }
-var vdomify = (newVNode2) => newVNode2 !== true && newVNode2 !== false && newVNode2 ? newVNode2 : text("");
-var recycleNode = (node) => node.nodeType === TEXT_NODE ? text(node.nodeValue, node) : new VirtualNode2(node.nodeName.toLowerCase(), EMPTY_OBJ, EMPTY_ARR.map.call(node.childNodes, recycleNode), SSR_NODE, node);
-function patchNode(parent, node, oldVNode2, newVNode2, isSvg2) {
-  if (oldVNode2 === newVNode2) {
-  } else if (oldVNode2 != null && oldVNode2.type === TEXT_NODE && newVNode2.type === TEXT_NODE) {
-    if (oldVNode2.tag !== newVNode2.tag) node.nodeValue = newVNode2.tag;
-  } else if (oldVNode2 == null || oldVNode2.tag !== newVNode2.tag) {
+var vdomify = (newVNode) => newVNode !== true && newVNode !== false && newVNode ? newVNode : text("");
+function patchChildren(node, newVKids, isSvg) {
+  for (let i2 = 0; i2 < newVKids.length; i2++) {
+    if (!newVKids[i2]) continue;
+    while (typeof newVKids[i2].tag === "function") {
+      newVKids[i2] = newVKids[i2].tag(newVKids[i2].props, newVKids[i2].children);
+    }
+  }
+  let oldVKids = node._vchildren ??= [];
+  let tmpVKid, oldVKid, oldKey, newKey, oldHead = 0, newHead = 0, oldTail = oldVKids.length - 1, newTail = newVKids.length - 1;
+  while (newHead <= newTail && oldHead <= oldTail) {
+    if ((oldKey = getKey(oldVKids[oldHead])) == null || oldKey !== getKey(newVKids[newHead])) {
+      break;
+    }
+    patchNode(
+      node,
+      oldVKids[oldHead].node,
+      oldVKids[oldHead++],
+      newVKids[newHead] = vdomify(newVKids[newHead++]),
+      isSvg
+    );
+  }
+  while (newHead <= newTail && oldHead <= oldTail) {
+    if ((oldKey = getKey(oldVKids[oldTail])) == null || oldKey !== getKey(newVKids[newTail])) {
+      break;
+    }
+    patchNode(
+      node,
+      oldVKids[oldTail].node,
+      oldVKids[oldTail--],
+      newVKids[newTail] = vdomify(newVKids[newTail--]),
+      isSvg
+    );
+  }
+  if (oldHead > oldTail) {
+    while (newHead <= newTail) {
+      node.insertBefore(
+        createNode(newVKids[newHead] = vdomify(newVKids[newHead++]), isSvg),
+        (oldVKid = oldVKids[oldHead]) && oldVKid.node
+      );
+    }
+  } else if (newHead > newTail) {
+    while (oldHead <= oldTail) {
+      node.removeChild(oldVKids[oldHead++].node);
+    }
+  } else {
+    for (var keyed = {}, newKeyed = {}, i = oldHead; i <= oldTail; i++) {
+      if ((oldKey = oldVKids[i].key) != null) {
+        keyed[oldKey] = oldVKids[i];
+      }
+    }
+    while (newHead <= newTail) {
+      oldKey = getKey(oldVKid = oldVKids[oldHead]);
+      newKey = getKey(newVKids[newHead] = vdomify(newVKids[newHead]));
+      if (newKeyed[oldKey] || newKey != null && newKey === getKey(oldVKids[oldHead + 1])) {
+        if (oldKey == null) {
+          node.removeChild(oldVKid.node);
+        }
+        oldHead++;
+        continue;
+      }
+      if (newKey == null || oldVNode.type === SSR_NODE) {
+        if (oldKey == null) {
+          patchNode(
+            node,
+            oldVKid && oldVKid.node,
+            oldVKid,
+            newVKids[newHead],
+            isSvg
+          );
+          newHead++;
+        }
+        oldHead++;
+      } else {
+        if (oldKey === newKey) {
+          patchNode(node, oldVKid.node, oldVKid, newVKids[newHead], isSvg);
+          newKeyed[newKey] = true;
+          oldHead++;
+        } else {
+          if ((tmpVKid = keyed[newKey]) != null) {
+            patchNode(
+              node,
+              node.insertBefore(tmpVKid.node, oldVKid && oldVKid.node),
+              tmpVKid,
+              newVKids[newHead],
+              isSvg
+            );
+            newKeyed[newKey] = true;
+          } else {
+            patchNode(
+              node,
+              oldVKid && oldVKid.node,
+              null,
+              newVKids[newHead],
+              isSvg
+            );
+          }
+        }
+        newHead++;
+      }
+    }
+    while (oldHead <= oldTail) {
+      if (getKey(oldVKid = oldVKids[oldHead++]) == null) {
+        node.removeChild(oldVKid.node);
+      }
+    }
+    for (var i in keyed) {
+      if (newKeyed[i] == null) {
+        node.removeChild(keyed[i].node);
+      }
+    }
+  }
+  node._vchildren = newVKids;
+}
+function patchNode(parent, node, oldVNode2, newVNode, isSvg) {
+  if (oldVNode2 === newVNode) {
+  } else if (oldVNode2 != null && oldVNode2.type === TEXT_NODE && newVNode.type === TEXT_NODE) {
+    if (oldVNode2.tag !== newVNode.tag) node.nodeValue = newVNode.tag;
+  } else if (oldVNode2 == null || oldVNode2.tag !== newVNode.tag) {
     node = parent.insertBefore(
-      createNode(newVNode2 = vdomify(newVNode2), isSvg2),
+      createNode(newVNode = vdomify(newVNode), isSvg),
       node
     );
     if (oldVNode2 != null) {
       parent.removeChild(oldVNode2.node);
     }
-  } else diffChildren: {
-    let tmpVKid, oldVKid, oldKey, newKey, oldProps = oldVNode2.props, newProps = newVNode2.props, oldVKids = oldVNode2.children, newVKids = newVNode2.children, oldHead = 0, newHead = 0, oldTail = oldVKids.length - 1, newTail = newVKids.length - 1;
-    isSvg2 = isSvg2 || newVNode2.tag === "svg";
-    for (let i2 in { ...oldProps, ...newProps }) {
-      if ((i2 === "value" || i2 === "selected" || i2 === "checked" ? node[i2] : oldProps[i2]) !== newProps[i2]) {
-        patchProperty(node, i2, oldProps[i2], newProps[i2], isSvg2);
+  } else {
+    let oldProps = oldVNode2.props, newProps = newVNode.props;
+    isSvg = isSvg || newVNode.tag === "svg";
+    for (let i in { ...oldProps, ...newProps }) {
+      if ((i === "value" || i === "selected" || i === "checked" ? node[i] : oldProps[i]) !== newProps[i]) {
+        patchProperty(node, i, oldProps[i], newProps[i], isSvg);
       }
     }
     if (newProps.unsafeInnerHtml) {
       node.innerHTML = newProps.unsafeInnerHtml;
-      break diffChildren;
-    }
-    while (newHead <= newTail && oldHead <= oldTail) {
-      if ((oldKey = getKey(oldVKids[oldHead])) == null || oldKey !== getKey(newVKids[newHead])) {
-        break;
-      }
-      patchNode(
-        node,
-        oldVKids[oldHead].node,
-        oldVKids[oldHead++],
-        newVKids[newHead] = vdomify(newVKids[newHead++]),
-        isSvg2
-      );
-    }
-    while (newHead <= newTail && oldHead <= oldTail) {
-      if ((oldKey = getKey(oldVKids[oldTail])) == null || oldKey !== getKey(newVKids[newTail])) {
-        break;
-      }
-      patchNode(
-        node,
-        oldVKids[oldTail].node,
-        oldVKids[oldTail--],
-        newVKids[newTail] = vdomify(newVKids[newTail--]),
-        isSvg2
-      );
-    }
-    if (oldHead > oldTail) {
-      while (newHead <= newTail) {
-        node.insertBefore(
-          createNode(newVKids[newHead] = vdomify(newVKids[newHead++]), isSvg2),
-          (oldVKid = oldVKids[oldHead]) && oldVKid.node
-        );
-      }
-    } else if (newHead > newTail) {
-      while (oldHead <= oldTail) {
-        node.removeChild(oldVKids[oldHead++].node);
-      }
     } else {
-      for (var keyed = {}, newKeyed = {}, i = oldHead; i <= oldTail; i++) {
-        if ((oldKey = oldVKids[i].key) != null) {
-          keyed[oldKey] = oldVKids[i];
-        }
-      }
-      while (newHead <= newTail) {
-        oldKey = getKey(oldVKid = oldVKids[oldHead]);
-        newKey = getKey(newVKids[newHead] = vdomify(newVKids[newHead]));
-        if (newKeyed[oldKey] || newKey != null && newKey === getKey(oldVKids[oldHead + 1])) {
-          if (oldKey == null) {
-            node.removeChild(oldVKid.node);
-          }
-          oldHead++;
-          continue;
-        }
-        if (newKey == null || oldVNode2.type === SSR_NODE) {
-          if (oldKey == null) {
-            patchNode(
-              node,
-              oldVKid && oldVKid.node,
-              oldVKid,
-              newVKids[newHead],
-              isSvg2
-            );
-            newHead++;
-          }
-          oldHead++;
-        } else {
-          if (oldKey === newKey) {
-            patchNode(node, oldVKid.node, oldVKid, newVKids[newHead], isSvg2);
-            newKeyed[newKey] = true;
-            oldHead++;
-          } else {
-            if ((tmpVKid = keyed[newKey]) != null) {
-              patchNode(
-                node,
-                node.insertBefore(tmpVKid.node, oldVKid && oldVKid.node),
-                tmpVKid,
-                newVKids[newHead],
-                isSvg2
-              );
-              newKeyed[newKey] = true;
-            } else {
-              patchNode(
-                node,
-                oldVKid && oldVKid.node,
-                null,
-                newVKids[newHead],
-                isSvg2
-              );
-            }
-          }
-          newHead++;
-        }
-      }
-      while (oldHead <= oldTail) {
-        if (getKey(oldVKid = oldVKids[oldHead++]) == null) {
-          node.removeChild(oldVKid.node);
-        }
-      }
-      for (var i in keyed) {
-        if (newKeyed[i] == null) {
-          node.removeChild(keyed[i].node);
-        }
-      }
+      patchChildren(node, newVNode.children, isSvg);
     }
   }
-  return newVNode2.node = node;
+  return newVNode.node = node;
 }
-var text = (value, node) => new VirtualNode2(value, EMPTY_OBJ, EMPTY_ARR, TEXT_NODE, node);
-var createElement = (tag, props, children = EMPTY_ARR) => new VirtualNode2(tag, props, Array.isArray(children) ? children : [children]);
-var h = (type, props, ...children) => typeof type === "function" ? type(props, children) : createElement(type, props ?? {}, children.flatMap((any) => isStrNum(any) ? text(any) : any));
-function render(element, vdom, ctx = {}) {
+var text = (value, node) => new VirtualNode(value, EMPTY_OBJ, EMPTY_ARR, TEXT_NODE, node);
+var createElement = (tag, props, children = EMPTY_ARR) => new VirtualNode(tag, props, children);
+var h = (type, props, ...children) => createElement(type, props ?? {}, children.flatMap((any) => isStrNum(any) ? text(any) : any));
+var Fragment = (_2, c) => c;
+function render(element, children, ctx = {}) {
   renderContext = ctx;
-  let node = patchNode(
-    element.parentNode,
-    element,
-    element.vdom || recycleNode(element),
-    vdom
-  );
-  node.vdom = vdom;
+  patchChildren(element, Array.isArray(children) ? children : [children]);
   renderContext = null;
-  return node;
 }
+var elementFactory = (tag) => (propsOrChild, ...children) => {
+  if (propsOrChild instanceof VNode || isStrNum(propsOrChild)) {
+    children.unshift(propsOrChild);
+    propsOrChild = {};
+  }
+  return createElement(tag, propsOrChild, children);
+};
+var Box = elementFactory("div");
+var Button = elementFactory("button");
+var Link = elementFactory("link");
+var Paragraph = elementFactory("p");
+var Span = elementFactory("span");
+var Image = elementFactory("img");
+var Form = elementFactory("form");
+var Input = elementFactory("input");
+var Label = elementFactory("label");
+var Heading = {
+  H1: elementFactory("h1"),
+  H2: elementFactory("h2"),
+  H3: elementFactory("h3"),
+  H4: elementFactory("h4"),
+  H5: elementFactory("h5"),
+  H6: elementFactory("h6")
+};
+var OrderedList = elementFactory("ol");
+var List = elementFactory("ul");
+var ListItem = elementFactory("li");
+var Section = elementFactory("section");
+var Main = elementFactory("main");
+var Nav = elementFactory("nav");
+var Footer = elementFactory("footer");
 
 // src/template.js
-var stringExpressions = /* @__PURE__ */ new Map();
-function generateFunctionFromString(expression) {
-  if (stringExpressions.has(expression)) {
-    return stringExpressions.get(expression);
+var isLazy = Symbol("lazy");
+var Lazy = class {
+  constructor(fn2) {
+    this.fn = fn2;
   }
-  const safeFunction = () => {
-    try {
-      let func = new Function(
-        ["scope"],
-        `with (scope) {  return ${expression}; }`
-      );
-      Object.defineProperty(func, "name", {
-        value: `[expression]: ${expression}`
-      });
-      return func;
-    } catch (error) {
-      console.log(`Error while compiling expression: ${expression}`, error);
-      return () => "";
+  [isLazy] = true;
+};
+var unwrap = (v2) => v2[isLazy] ? v2.fn() : v2;
+var Expression = class _Expression {
+  static Cache = /* @__PURE__ */ new Map();
+  constructor(expression) {
+    if (_Expression.Cache.has(expression)) {
+      this.call = _Expression.Cache.get(expression);
     }
-  };
-  stringExpressions.set(expression, safeFunction());
-  return safeFunction();
-}
+    const safeFunction = () => {
+      try {
+        let func = new Function(["scope"], `with (scope) {  return ${expression}; }`);
+        Object.defineProperty(func, "name", {
+          value: `[expression]: ${expression}`
+        });
+        return func;
+      } catch (error) {
+        console.log(`Error while compiling expression: ${expression}`, error);
+        return () => "";
+      }
+    };
+    _Expression.Cache.set(expression, safeFunction());
+    this.call = _Expression.Cache.get(expression);
+  }
+};
 function resolveScopePath(key, scope) {
   let segments = key.split(".");
   let value = scope;
@@ -1132,47 +1164,65 @@ function resolveScopePath(key, scope) {
   }
   return value;
 }
-function compileIntermediary(element, scope = {}) {
+function compileIntermediary(element, scope) {
+  if (!element) return null;
   if (Array.isArray(element)) {
     return element.map((e) => compileIntermediary(e, scope));
   }
   if (element.nodeType != 1) {
-    return new Lazy(() => text(element.nodeValue));
+    return new text(element.nodeValue);
   }
   let tag = element.tagName.toLowerCase();
-  let attributes = {};
-  let children = [];
+  let attributes = {}, children = [], show, eachStatement, eachVar, ifCondition, childExpression;
   for (let attr of element.attributes) {
+    let key = attr.nodeName, value = attr.nodeValue, expression, modifier;
     if (attr.nodeName[0] === ":") {
-      const fn2 = generateFunctionFromString(attr.nodeValue);
-      if (attr.nodeName === ":text") {
-        children.push(new Lazy(() => text(fn2(scope))));
-      } else if (attr.nodeName === ":unsafe-inner-html") {
-        attributes["unsafeInnerHtml"] = new Lazy(() => fn2(scope));
-      } else if (attr.nodeName === ":show") {
-      } else if (attr.nodeName === ":if") {
-      } else if (attr.nodeName === ":each") {
+      expression = true;
+      key = attr.nodeName.slice(1);
+    } else if (attr.nodeName.includes(":")) {
+      expression = true;
+      key = attr.nodeName.split(":")[0];
+      modifier = attr.nodeName.split(":")[1];
+    }
+    if (expression) {
+      if (key === "text") {
+        childExpression = new Lazy(() => text(new Expression(value).call(scope)));
+      } else if (key === "unsafe-inner-html") {
+        attributes["unsafeInnerHtml"] = new Lazy(() => new Expression(value).call(scope));
+      } else if (key === "show") {
+        show = new Expression(attr.nodeValue);
+      } else if (key === "if") {
+        ifCondition = new Expression(attr.nodeValue);
+      } else if (key === "each" && modifier) {
+        eachStatement = new Expression(value);
+        eachVar = modifier;
       } else {
-        attributes[attr.nodeName.slice(1)] = new Lazy(() => fn2(scope));
+        attributes[key] = new Lazy(() => new Expression(value).call(scope));
       }
-    } else if (attr.nodeName[0] === "@") {
-      attributes["on" + attr.nodeName.slice(1)] = new Lazy(() => resolveScopePath(attr.nodeValue, scope));
     } else {
-      attributes[attr.nodeName] = attr.nodeValue;
+      if (key[0] === "@") {
+        attributes["on" + key.slice(1)] = new Lazy(() => resolveScopePath(value, scope));
+      } else {
+        attributes[key] = value;
+      }
     }
   }
-  children.push(...Array.from((tag == "template" ? element.content : element).childNodes));
+  children.push(childExpression, ...Array.from((tag == "template" ? element.content : element).childNodes));
   for (let i = 0; i < children.length; i++) {
     if (children[i] instanceof Lazy) continue;
     children[i] = compileIntermediary(children[i], scope);
   }
-  return new Lazy(() => h(tag, attributes, ...children));
+  return new Lazy(
+    show ? () => show(scope) ? createElement(tag, attributes, children) : null : () => createElement(tag, attributes, children)
+  );
 }
 function renderIntermediaryTemplate(lazy) {
+  if (!lazy) return null;
   if (Array.isArray(lazy)) {
     return lazy.map((l) => renderIntermediaryTemplate(l));
   }
   let vnode = unwrap(lazy);
+  if (!vnode) return null;
   if (vnode.props) {
     for (let k2 in vnode.props) {
       if (vnode.props[k2] instanceof Lazy) {
@@ -1228,6 +1278,7 @@ function constructComponentFromElement(element) {
       super();
       this.attachShadow({ mode: "open" });
       this.shadowRoot.adoptedStyleSheets = sheets;
+      this.rootEffectScope = Yt();
     }
     connectedCallback() {
       const data = it({});
@@ -1244,13 +1295,10 @@ function constructComponentFromElement(element) {
         it,
         qt
       );
-      this.root = document.createElement("shadow-root");
-      this.shadowRoot.appendChild(this.root);
       this.renderFn = compileIntermediary(Array.from(markup.children), data);
-      this.effectScope = Yt();
-      this.effectScope.run(() => {
+      this.rootEffectScope.run(() => {
         qt(() => {
-          render(this.root, h("shadow-root", {}, renderIntermediaryTemplate(this.renderFn)), { host: this });
+          render(this.shadowRoot, renderIntermediaryTemplate(this.renderFn), { host: this });
         });
       });
     }
@@ -1282,7 +1330,6 @@ function initBlackberry() {
 
 // src/element.js
 Symbol.metadata ??= Symbol("metadata");
-var toKebabCase = (str) => str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, "$1-$2").toLowerCase();
 var observedAttributes = /* @__PURE__ */ new Map();
 var globalSheets = null;
 function getGlobalStyleSheets() {
@@ -1325,26 +1372,23 @@ var BlackberryElement = class extends HTMLElement {
     if (this.constructor.useGlobalStyles) {
       addGlobalStylesToShadowRoot(this.shadowRoot);
     }
-    this.rootEL = document.createElement("element-root");
-    this.shadowRoot.appendChild(this.rootEL);
+    this.rootEffectScope = Yt();
   }
   connectedCallback() {
     const self = this;
-    const root = (child) => h("element-root", {}, child);
-    this.rootEffect = Yt();
-    this.rootEffect.run(() => {
+    this.rootEffectScope.run(() => {
       this.onMount?.();
       qt(() => {
-        render(this.rootEL, root(this.render.call(self)), { host: this });
+        render(this.shadowRoot, this.render.call(self), { host: this });
       });
       this.onMounted?.();
     });
   }
   disconnectedCallback() {
-    this.rootEffect.run(() => {
+    this.rootEffectScope.run(() => {
       this.onUnmount?.();
     });
-    this.rootEffect.stop();
+    this.rootEffectScope.stop();
   }
   render() {
     throw new Error("You must implement the render method in your custom element.");
@@ -1357,50 +1401,91 @@ var Component = BlackberryElement;
 var css = String.raw;
 var h2 = h;
 var text2 = text;
-var Fragment2 = void 0;
-var elementFactory2 = void 0;
-function state(_2, { kind, name }) {
-  if (kind === "accessor") {
-    return {
-      get() {
-        return this._decoratedStates[name];
-      },
-      set(val) {
-        this._decoratedStates[name] = val;
-      },
-      init(initialValue) {
-        this._decoratedStates[name] = initialValue;
-      }
-    };
-  } else {
-    throw new Error("Invalid decorator usage: @state only works on class accessors.");
-  }
+var Fragment2 = Fragment;
+var elementFactory2 = elementFactory;
+function state() {
+  return function(_2, { kind, name }) {
+    if (kind === "accessor") {
+      return {
+        get() {
+          return this._decoratedStates[name];
+        },
+        set(val) {
+          this._decoratedStates[name] = val;
+        },
+        init(initialValue) {
+          this._decoratedStates[name] = initialValue;
+        }
+      };
+    } else {
+      throw new Error("Invalid decorator usage: @state only works on class accessors.");
+    }
+  };
 }
-function attribute(value, { kind, name, metadata }) {
-  const attrName = toKebabCase(name);
-  if (!observedAttributes.has(metadata)) observedAttributes.set(metadata, /* @__PURE__ */ new Set());
-  observedAttributes.get(metadata).add(attrName);
-  if (kind === "accessor") {
-    return {
-      get() {
-        return this.attrs[attrName];
-      },
-      set(val) {
-        this.attrs[attrName] = val;
-        this.setAttribute(attrName, String(val));
-      },
-      init(initialValue) {
-        this.attrs[attrName] = initialValue;
-      }
-    };
-  } else if (kind === "getter") {
-    return function() {
-      return this.attrs[attrName] ?? value();
-    };
-  } else {
-    throw new Error("Invalid decorator usage: @attr only works on class accessors and getters.");
-  }
+function attribute(overriddenName) {
+  return function(value, { kind, name, metadata }) {
+    const attrName = overriddenName ?? name;
+    if (!observedAttributes.has(metadata)) observedAttributes.set(metadata, /* @__PURE__ */ new Set());
+    observedAttributes.get(metadata).add(attrName);
+    if (kind === "accessor") {
+      return {
+        get() {
+          return this.attrs[attrName];
+        },
+        set(val) {
+          this.attrs[attrName] = val;
+          this.setAttribute(attrName, String(val));
+        },
+        init(initialValue) {
+          this.attrs[attrName] = initialValue;
+        }
+      };
+    } else if (kind === "getter") {
+      return function() {
+        return this.attrs[attrName] ?? value();
+      };
+    } else {
+      throw new Error("Invalid decorator usage: @attr only works on class accessors and getters.");
+    }
+  };
 }
+function component(name) {
+  return function(target) {
+    target.define(name);
+  };
+}
+
+// src/jsx.js
+var root = document.createElement("jsx-root");
+document.body.prepend(root);
+var count = Pt(0);
+var counterProvider = () => {
+  return h(counter, { count });
+};
+var counter = ({ count: count2 }) => {
+  return h("button", { onclick: () => count2.value++ }, `the count is ${count2.value}`);
+};
+var Test = class extends Component {
+  render() {
+    if (count.value > 5) {
+      return h("div", {}, [
+        h(
+          "p",
+          {},
+          "The count is greater than 5",
+          h("div", {}, [
+            h(counterProvider, {}, [])
+          ])
+        )
+      ]);
+    }
+    return h("div", {}, [
+      h(counterProvider, {}, [])
+    ]);
+  }
+};
+Test.define("jsx-test");
+root.appendChild(document.createElement("jsx-test"));
 export {
   $ as ARRAY_ITERATE_KEY,
   BlackberryElement,
@@ -1416,6 +1501,7 @@ export {
   pn as TriggerOpTypes,
   dn as WatchErrorCodes,
   attribute,
+  component,
   fn as computed,
   css,
   an as customRef,

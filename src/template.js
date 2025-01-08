@@ -1,103 +1,125 @@
 
 import { effect, reactive, effectScope } from "../assets/reactivity@3.5.13.js"
-import { Lazy, unwrap } from "./renderer.js";
+import { Fragment } from "./vdom.js";
+import { createElement } from "./vdom.js";
 import { h, text, render } from "./vdom.js"
 
-const stringExpressions = new Map();
-function generateFunctionFromString(expression) {
-    if (stringExpressions.has(expression)) { return stringExpressions.get(expression); }
+const isLazy = Symbol("lazy");
+class Lazy { constructor(fn) { this.fn = fn };[isLazy] = true }
+const unwrap = (v) => v[isLazy] ? v.fn() : v;
+
+class Expression {
+  static Cache = new Map();
+  constructor(expression) {
+    if (Expression.Cache.has(expression)) { this.call = Expression.Cache.get(expression); }
     const safeFunction = () => {
-        try {
-            let func = new Function(
-                ["scope"],
-                `with (scope) {  return ${expression}; }`
-            )
-            Object.defineProperty(func, "name", {
-                value: `[expression]: ${expression}`,
-            })
-            return func
-        } catch (error) {
-            console.log(`Error while compiling expression: ${expression}`, error)
-            return () => ""
-        }
+      try {
+        let func = new Function(["scope"], `with (scope) {  return ${expression}; }`)
+        Object.defineProperty(func, "name", {
+          value: `[expression]: ${expression}`,
+        })
+        return func
+      } catch (error) {
+        console.log(`Error while compiling expression: ${expression}`, error)
+        return () => ""
+      }
     }
-    stringExpressions.set(expression, safeFunction())
-    return safeFunction()
+    Expression.Cache.set(expression, safeFunction())
+    this.call = Expression.Cache.get(expression)
+  }
 }
 
 function resolveScopePath(key, scope) {
   let segments = key.split(".")
   let value = scope
-  for(let segment of segments) {
+  for (let segment of segments) {
     value = value[segment]
   }
   return value
 }
 
-function compileIntermediary(element, scope = {}) {
+function compileIntermediary(element, scope) {
 
-  if(Array.isArray(element)) {
+  if(!element) return null
+
+  if (Array.isArray(element)) {
     return element.map(e => compileIntermediary(e, scope))
   }
 
   if (element.nodeType != 1) {
-    return new Lazy(() => text(element.nodeValue))
+    return new text(element.nodeValue)
   }
 
   let tag = element.tagName.toLowerCase()
 
-  let attributes = {};
-  let children = [];
+  let attributes = {}, children = [], show, eachStatement, eachVar, ifCondition, childExpression;
 
-  for(let attr of element.attributes) {
+  for (let attr of element.attributes) {
+    let key = attr.nodeName, value = attr.nodeValue, expression, modifier;
     if (attr.nodeName[0] === ":") {
-      const fn = generateFunctionFromString(attr.nodeValue)
-      if(attr.nodeName === ":text") {
-        children.push(new Lazy(() => text(fn(scope))))
-      } else if (attr.nodeName === ":unsafe-inner-html") {
-        attributes["unsafeInnerHtml"] = new Lazy(() => fn(scope));
-      } else if (attr.nodeName === ":show") {
+      expression = true;
+      key = attr.nodeName.slice(1)
+    } else if (attr.nodeName.includes(":")) {
+      expression = true;
+      key = attr.nodeName.split(":")[0];
+      modifier = attr.nodeName.split(":")[1];
+    }
 
-      } else if (attr.nodeName === ":if") {
-
-      } else if (attr.nodeName === ":each") {
-
+    if (expression) {
+      if (key === "text") {
+        childExpression = new Lazy(() => text(new Expression(value).call(scope)))
+      } else if (key === "unsafe-inner-html") {
+        attributes["unsafeInnerHtml"] = new Lazy(() => new Expression(value).call(scope))
+      } else if (key === "show") {
+        show = new Expression(attr.nodeValue)
+      } else if (key === "if") {
+        ifCondition = new Expression(attr.nodeValue)
+      } else if (key === "each" && modifier) {
+        eachStatement = new Expression(value)
+        eachVar = modifier
       } else {
-        attributes[attr.nodeName.slice(1)] = new Lazy(() => fn(scope))
+        attributes[key] = new Lazy(() => new Expression(value).call(scope))
       }
-    } else if (attr.nodeName[0] === "@") {
-      attributes["on" + attr.nodeName.slice(1)] = new Lazy(() => resolveScopePath(attr.nodeValue, scope))
     } else {
-      attributes[attr.nodeName] = attr.nodeValue
+      if (key[0] === "@") {
+        attributes["on" + key.slice(1)] = new Lazy(() => resolveScopePath(value, scope))
+      } else {
+        attributes[key] = value
+      }
     }
   }
 
-  children.push(...Array.from((tag == 'template' ? element.content : element).childNodes))
+  children.push(childExpression, ...(Array.from((tag == 'template' ? element.content : element).childNodes)))
 
   for (let i = 0; i < children.length; i++) {
-    if(children[i] instanceof Lazy) continue;
+    if (children[i] instanceof Lazy) continue;
     children[i] = compileIntermediary(children[i], scope)
   }
 
-  return new Lazy(() => h(tag, attributes, ...children))
+  return new Lazy(
+    show ? (() => show(scope) ? createElement(tag, attributes, children) : null)
+      : () => createElement(tag, attributes, children)
+  )
 }
 
 function renderIntermediaryTemplate(lazy) {
-  if(Array.isArray(lazy)) {
+  if(!lazy) return null
+  if (Array.isArray(lazy)) {
     return lazy.map(l => renderIntermediaryTemplate(l))
   }
 
   let vnode = unwrap(lazy)
+  if (!vnode) return null
 
-  if(vnode.props) {
-    for(let k in vnode.props) {
-      if(vnode.props[k] instanceof Lazy) {
+  if (vnode.props) {
+    for (let k in vnode.props) {
+      if (vnode.props[k] instanceof Lazy) {
         vnode.props[k] = unwrap(vnode.props[k])
       }
     }
   }
 
-  if(vnode.children) vnode.children = vnode.children.map(c => renderIntermediaryTemplate(c))
+  if (vnode.children) vnode.children = vnode.children.map(c => renderIntermediaryTemplate(c))
 
   return vnode
 }
@@ -156,6 +178,7 @@ function constructComponentFromElement(element) {
       super();
       this.attachShadow({ mode: "open" });
       this.shadowRoot.adoptedStyleSheets = sheets;
+      this.rootEffectScope = effectScope()
     }
 
     connectedCallback() {
@@ -176,13 +199,11 @@ function constructComponentFromElement(element) {
         effect
       );
 
-      this.root = document.createElement("shadow-root")
-      this.shadowRoot.appendChild(this.root)
       this.renderFn = compileIntermediary(Array.from(markup.children), data)
-      this.effectScope = effectScope()
-      this.effectScope.run(() => {
+
+      this.rootEffectScope.run(() => {
         effect(() => {
-          render(this.root, h("shadow-root", {}, renderIntermediaryTemplate(this.renderFn)), { host: this })
+          render(this.shadowRoot, renderIntermediaryTemplate(this.renderFn), { host: this })
         })
       })
     }
