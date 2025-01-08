@@ -1,6 +1,10 @@
 <!DOCTYPE HTML>
-<html lang="en" >
+<html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Blackberry.js - a zero-build framework for the artisanal web">
+
         <style>body {transition: opacity .25s .3s;} [blackberry-cloak] {opacity: 0;}</style>
 
         <!--	Deps	-->
@@ -13,13 +17,9 @@
 
         <!--	Init	-->
         <script type="module">
-            import Alpine from "/assets/alpinejs@3.14.8.js";
-            import Blackberry from "./dist/blackberry.alpine@0.0.1.js";
+            import { start } from "/dist/blackberry@0.0.1.js";
 
-            window.Alpine = Alpine;
-
-            Alpine.plugin(Blackberry.alpinePlugin);
-            Alpine.start();
+            start();
 
             const lenis = new Lenis({
                 autoRaf: true,
@@ -215,17 +215,16 @@
             }
         </style>
     </head>
-    <body blackberry-cloak>
+    <body>
 
-        <inline-h></inline-h>
-        <jsx-test name="pooper"></jsx-test>
+        <div id="test"></div>
 
         <!-- ##Counter Component -->
 
         <template blackberry="counter-component" attributes="initial">
             <button
                 @click="increment"
-                x-text="`the count is ${count}`"
+                :text="`the count is ${count}`"
             ></button>
             <script>
                 $state.count = Number($attributes.initial ?? 0);
@@ -319,7 +318,7 @@
                 $state.className = `language-` + $attributes.language;
                 $state.content = Prism.highlight(content.join("\n").trim(), Prism.languages[$attributes.language], $attributes.language);
             </script>
-            <pre><code :class="className" x-init="$el.innerHTML = content"></code></pre>
+            <pre><code :class="className" :unsafe-inner-html="content"></code></pre>
             <style>
                 pre[class*="language-"],
                 code[class*="language-"] {
@@ -492,9 +491,9 @@
 
             <h2 class="title">Overview</h2>
             <p class="text">
-                Blackberry.js lets you create reusable components using
-                Alpine.js with scoped styles and a composable component model,
-                without a build step or additional dependencies.
+                Blackberry is a tiny frontend library that gives you reactivity and composability.
+                Scoped styles, optional JSX rendering, and a simple API make it a fun choice for
+                building websites and web apps.
             </p>
 
             <!-- Example -->
@@ -502,12 +501,12 @@
             <code-block language="html" content='
                 <template blackberry="counter-component" attributes="initial">
 
-                    <button @click="increment" x-text="`the count is ${count}`"></button>
+                    <button @click="increment" :text="`the count is ${count}`"></button>
 
                     <script>
-                        $state.count = Number($attributes.initial ?? 0);
+                        $state.count = Number( $attributes.initial ?? 0 );
                         $state.increment = () => $state.count++;
-                        $effect(() => console.log("count changed", $state.count));
+                        $effect(() => console.log( "count changed", $state.count ));
                     </script>
 
                     <style>
@@ -527,8 +526,9 @@
                 Blackberry.js is inspired by
                 <a href="https://strawberry.quest" target="_blank">Strawberry.js</a>,
                 and is designed to be used as a lightweight html-first
-                alternative to frameworks like Vue and Svelte, but works without
-                requiring build tooling or a complex dependency tree.
+                alternative to frameworks like Vue and Svelte without
+                requiring build tooling or a complex dependency tree, while still providing
+                a component model, scoped styles, and reactivity.
             </p>
 
             <spacer-line></spacer-line>
@@ -538,27 +538,14 @@
             <h2 class="title">Setup</h2>
             <p class="text">
                 The ideal way of using Blackberry.js is by copying the source
-                code into your project directory. You can either use the source
-                code, minified source, or a version that is bundled with
-                alpine.js and automatically initalizes both.
+                code into your project directory.
             </p>
 
-            <h3 class="title">Auto Initalization</h3>
-            <code-block language="html" content='
-                <script type="module" src="/dist/blackberry.bundle.js"></script>
-            '></code-block>
-
-            <h3 class="title">Manual Initalization</h3>
             <code-block language="html" content='
                 <script type="module">
-                    import Alpine from "/dist/alpine.js"
                     import Blackberry from "/dist/blackberry.js"
-
-                    window.Alpine = Alpine
                     window.Blackberry = Blackberry
-
-                    Alpine.plugin(Blackberry.alpinePlugin())
-                    Alpine.start()
+                    Blackberry.start()
                 </script>
             '></code-block>
 
