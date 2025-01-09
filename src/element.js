@@ -4,13 +4,13 @@ export { h, Fragment } from "preact"
 
 Symbol.metadata ??= Symbol('metadata');
 
-let observedAttributes = new Map()
+let observed_attrs = new Map()
 
-let globalSheets = null;
+let global_sheets = null;
 
-let getGlobalStyleSheets = () => {
-  if (globalSheets === null) {
-    globalSheets = Array.from(document.styleSheets)
+let get_global_stylesheets = () => {
+  if (global_sheets === null) {
+    global_sheets = Array.from(document.styleSheets)
       .map(x => {
         const sheet = new CSSStyleSheet();
         const css = Array.from(x.cssRules).map(rule => rule.cssText).join(' ');
@@ -19,12 +19,12 @@ let getGlobalStyleSheets = () => {
       });
   }
 
-  return globalSheets;
+  return global_sheets;
 }
 
-let addGlobalStylesToShadowRoot = (shadowRoot) => {
+let add_global_sheets_to_shadow_root = (shadowRoot) => {
   shadowRoot.adoptedStyleSheets.push(
-    ...getGlobalStyleSheets()
+    ...get_global_stylesheets()
   );
 }
 
@@ -41,7 +41,7 @@ export class BlackberryElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return Array.from(observedAttributes.get(this[Symbol.metadata]) ?? []);
+    return Array.from(observed_attrs.get(this[Symbol.metadata]) ?? []);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -58,7 +58,7 @@ export class BlackberryElement extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = [sheet];
 
     if (this.constructor.useGlobalStyles) {
-      addGlobalStylesToShadowRoot(this.shadowRoot);
+      add_global_sheets_to_shadow_root(this.shadowRoot);
     }
 
     this.rootEffectScope = effectScope()
@@ -117,8 +117,8 @@ export function state() {
 export function attribute(overriddenName) {
   return function (value, { kind, name, metadata }) {
     const attrName = overriddenName ?? name;
-    if (!observedAttributes.has(metadata)) observedAttributes.set(metadata, new Set());
-    observedAttributes.get(metadata).add(attrName);
+    if (!observed_attrs.has(metadata)) observed_attrs.set(metadata, new Set());
+    observed_attrs.get(metadata).add(attrName);
 
     if (kind === "accessor") {
       return {
