@@ -16,10 +16,16 @@ if(args.includes("src")) {
       {in: "builds/logo.ts", out: name("logo")},
     ],
     bundle: true,
-    minify: false,
+    minify: true,
     format: "esm",
     platform: "browser",
     target: ["es2022"],
+    alias: {
+      // preact: "./src/renderer.js"
+      preact: "./src/vdom.js"
+    },
+    treeShaking: true,
+    lineLimit: 120,
   })
 }
 

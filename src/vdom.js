@@ -1,326 +1,180 @@
-const SSR_NODE = 1, TEXT_NODE = 3, EMPTY_OBJ = {}, EMPTY_ARR = [], SVG_NS = "http://www.w3.org/2000/svg"
+// Adapted and fixed bugs from little-vdom.js
+// https://gist.github.com/developit/2038b141b31287faa663f410b6649a87
+// https://gist.github.com/marvinhagemeister/8950b1032d67918d21950b3985259d78
+// Added refs, style maps
 
-let renderContext = null;
+const h = (type, props, ...children) => {
+  return {
+    _type: type,
+    _props: props, // An object for components and DOM nodes, a string for text nodes.
+    _children: children.filter((_) => _ !== false),
+    key: props && props.key,
+  };
+};
 
-class VirtualNode {
-  constructor(tag, props, children, type, node) {
-    this.tag = tag;
-    this.props = props;
-    this.key = props.key;
-    this.children = ensureArray(props.children ?? children);
-    this.type = type;
-    this.node = node;
-  }
+const Fragment = (props) => {
+  return props.children;
+};
+
+let render_ctx = {};
+
+const render = (vnode, dom, ctx) => {
+  render_ctx = ctx;
+  let result = _render(vnode, dom, dom._vnode || (dom._vnode = {}));
+  render_ctx = {};
+  return result;
 }
 
-function listenerDelegate(event) {
-  this.events[event.type](event)
-}
+const _render = (newVNode, dom, oldVNode = dom._vnode || (dom._vnode = {})) => {
+  return diff(h(Fragment, {}, [newVNode]), dom, oldVNode);
+};
 
-let ensureArray = (x) => (Array.isArray(x) ? x : [x])
-
-let isStrNum = (x) => typeof x === "string" || typeof x === "number"
-
-let getKey = (vdom) => (vdom == null ? vdom : vdom.key)
-
-function patchProperty(node, key, oldValue, newValue, isSvg) {
-  if (key === "key" || key === "unsafeInnerHtml") {
-  } else if (key === "ref" && typeof newValue === "object") {
-    newValue.value = node
-  } else if (key[0] === "o" && key[1] === "n") {
-    let host = renderContext.host ?? node;
-    if (
-      !((node.events ?? (node.events = {}))[(key = key.slice(2))] = newValue ? (e) => newValue.call(host, e) : undefined)
-    ) {
-      node.removeEventListener(key, listenerDelegate)
-    } else if (!oldValue) {
-      node.addEventListener(key, listenerDelegate)
-    }
-  } else if (!isSvg && key !== "list" && key !== "form" && key in node) {
-    node[key] = newValue == null ? "" : newValue
-  } else if (newValue == null || newValue === false) {
-    node.removeAttribute(key)
-  } else {
-    node.setAttribute(key, newValue)
+const diff = (newVNode, dom, oldVNode, currentChildIndex) => {
+  // Check if we are in fact dealing with an array of nodes. A more common
+  // and faster version of this check is Array.isArray()
+  if (newVNode.pop) {
+    return diffChildren(dom, newVNode, oldVNode);
   }
-}
-
-function createNode(vdom, isSvg) {
-  while (typeof vdom.tag === "function") {
-    vdom = vdom.tag(vdom.props, vdom.children)
-  }
-  let props = vdom.props,
-    node = vdom.type === TEXT_NODE
-      ? document.createTextNode(vdom.tag)
-      : (isSvg = isSvg || vdom.tag === "svg")
-        ? document.createElementNS(SVG_NS, vdom.tag, { is: props.is })
-        : document.createElement(vdom.tag, { is: props.is })
-
-  for (let k in props) {
-    patchProperty(node, k, null, props[k], isSvg)
-  }
-
-  if (props.unsafeInnerHtml) {
-    node.innerHTML = props.unsafeInnerHtml
-  } else {
-
-    for (let i = 0; i < vdom.children.length; i++) {
-      if(!vdom.children[i]) continue;
-      while (typeof vdom.children[i].tag === "function") {
-        vdom.children[i] = vdom.children[i].tag(vdom.children[i].props, vdom.children[i].children)
+  // Check if we have a component. Only functions have a .call() method.
+  // Here components have a different signature compared to Preact or React:
+  //
+  // (props, state, updateFn) => VNode;
+  //
+  // The 3rd argument is basically similar concept-wise to setState
+  else if (newVNode._type.call) {
+    // Initialize state of component if necessary
+    newVNode._state = oldVNode._state || {};
+    // Add children to props
+    const props = { children: newVNode._children, ...newVNode._props };
+    const renderResult = newVNode._type(
+      props,
+      newVNode._state,
+      // Updater function that is passed as 3rd argument to components
+      (nextState) => {
+        // Update state with new value
+        Object.assign(newVNode._state, nextState);
+        return diff(newVNode, dom, newVNode);
       }
-    }
+    );
 
-    for (let i = 0; i < vdom.children.length; i++) {
-      node.appendChild(
-        createNode((vdom.children[i] = vdomify(vdom.children[i])), isSvg)
-      )
-    }
-    node._vchildren = vdom.children
+    newVNode._patched = diff(
+      renderResult,
+      dom,
+      (oldVNode && oldVNode._patched) || {},
+      currentChildIndex
+    );
+
+    return (dom._vnode = newVNode);
   }
+  // Standard DOM elements
+  else {
+    // Create a DOM element and assign it to the vnode. If one already exists,
+    // we will reuse the existing one and not create a new node.
+    const newDom =
+      oldVNode.dom ||
+      (newVNode._type
+        ? document.createElement(newVNode._type)
+        : // If we have a text node, vnode.props will be a string
+          new Text(newVNode._props));
 
-  return (vdom.node = node)
-}
+    // diff props
+    if (newVNode._props != oldVNode._props) {
+      // If newVNode.type is truthy (=not an empty string) we have a DOM node
+      if (newVNode._type) {
+        const { key, ref, ...newProps } = newVNode._props;
+        if (ref) ref.value = ref.current = newDom;
 
-let vdomify = (newVNode) => newVNode !== true && newVNode !== false && newVNode ? newVNode : text("")
-
-let recycleNode = (node) =>
-  node.nodeType === TEXT_NODE ?
-    text(node.nodeValue, node)
-    : new VirtualNode(node.nodeName.toLowerCase(), EMPTY_OBJ, EMPTY_ARR.map.call(node.childNodes, recycleNode), SSR_NODE, node)
-
-export function patchChildren(node, newVKids, isSvg) {
-
-  for (let i = 0; i < newVKids.length; i++) {
-    if(!newVKids[i]) continue;
-    while (typeof newVKids[i].tag === "function") {
-      newVKids[i] = newVKids[i].tag(newVKids[i].props, newVKids[i].children)
-    }
-  }
-
-  let oldVKids = node._vchildren ??= []
-
-  let tmpVKid,
-    oldVKid,
-    oldKey,
-    newKey,
-    oldHead = 0,
-    newHead = 0,
-    oldTail = oldVKids.length - 1,
-    newTail = newVKids.length - 1
-
-  while (newHead <= newTail && oldHead <= oldTail) {
-    if (
-      (oldKey = getKey(oldVKids[oldHead])) == null ||
-      oldKey !== getKey(newVKids[newHead])
-    ) {
-      break
-    }
-
-    patchNode(
-      node,
-      oldVKids[oldHead].node,
-      oldVKids[oldHead++],
-      (newVKids[newHead] = vdomify(newVKids[newHead++])),
-      isSvg
-    )
-  }
-
-  while (newHead <= newTail && oldHead <= oldTail) {
-    if (
-      (oldKey = getKey(oldVKids[oldTail])) == null ||
-      oldKey !== getKey(newVKids[newTail])
-    ) {
-      break
-    }
-
-    patchNode(
-      node,
-      oldVKids[oldTail].node,
-      oldVKids[oldTail--],
-      (newVKids[newTail] = vdomify(newVKids[newTail--])),
-      isSvg
-    )
-  }
-
-  if (oldHead > oldTail) {
-    while (newHead <= newTail) {
-      node.insertBefore(
-        createNode((newVKids[newHead] = vdomify(newVKids[newHead++])), isSvg),
-        (oldVKid = oldVKids[oldHead]) && oldVKid.node
-      )
-    }
-  } else if (newHead > newTail) {
-    while (oldHead <= oldTail) {
-      node.removeChild(oldVKids[oldHead++].node)
-    }
-  } else {
-    for (var keyed = {}, newKeyed = {}, i = oldHead; i <= oldTail; i++) {
-      if ((oldKey = oldVKids[i].key) != null) {
-        keyed[oldKey] = oldVKids[i]
-      }
-    }
-
-    while (newHead <= newTail) {
-      oldKey = getKey((oldVKid = oldVKids[oldHead]))
-      newKey = getKey((newVKids[newHead] = vdomify(newVKids[newHead])))
-
-      if (
-        newKeyed[oldKey] ||
-        (newKey != null && newKey === getKey(oldVKids[oldHead + 1]))
-      ) {
-        if (oldKey == null) {
-          node.removeChild(oldVKid.node)
-        }
-        oldHead++
-        continue
-      }
-
-      if (newKey == null || oldVNode.type === SSR_NODE) {
-        if (oldKey == null) {
-          patchNode(
-            node,
-            oldVKid && oldVKid.node,
-            oldVKid,
-            newVKids[newHead],
-            isSvg
-          )
-          newHead++
-        }
-        oldHead++
-      } else {
-        if (oldKey === newKey) {
-          patchNode(node, oldVKid.node, oldVKid, newVKids[newHead], isSvg)
-          newKeyed[newKey] = true
-          oldHead++
-        } else {
-          if ((tmpVKid = keyed[newKey]) != null) {
-            patchNode(
-              node,
-              node.insertBefore(tmpVKid.node, oldVKid && oldVKid.node),
-              tmpVKid,
-              newVKids[newHead],
-              isSvg
-            )
-            newKeyed[newKey] = true
-          } else {
-            patchNode(
-              node,
-              oldVKid && oldVKid.node,
-              null,
-              newVKids[newHead],
-              isSvg
-            )
+        for (let name in newProps) {
+          const value = newProps[name];
+          if (name === 'style' && !value.trim) {
+            for (const n in value) {
+              newDom.style[n] = value[n];
+            }
+          } else if (name.startsWith("on")) {
+            let host = render_ctx.host ?? newDom;
+            if (!((newDom._vev ?? (newDom._vev = {}))[name.slice(2).toLowerCase()] = (newProps[name] ? (e) => newProps[name].call(host, e) : undefined))) {
+              newDom.removeEventListener(name.slice(2).toLowerCase(), listener_deligate);
+            } else if (!oldVNode?._props?.[key]) {
+              newDom.addEventListener(name.slice(2).toLowerCase(), listener_deligate);
+            }
+          } else if (value != (oldVNode._props && oldVNode._props[name])) {
+            if (name in newDom || (name = name.toLowerCase()) in newDom) {
+              newDom[name] = value;
+            } else if (value != null) {
+              newDom.setAttribute(name, value);
+            } else {
+              newDom.removeAttribute(name);
+            }
           }
         }
-        newHead++
+      }
+      // Otherwise a text node
+      else {
+        // Update text node content
+        newDom.data = newVNode._props;
       }
     }
 
-    while (oldHead <= oldTail) {
-      if (getKey((oldVKid = oldVKids[oldHead++])) == null) {
-        node.removeChild(oldVKid.node)
-      }
-    }
-
-    for (var i in keyed) {
-      if (newKeyed[i] == null) {
-        node.removeChild(keyed[i].node)
-      }
-    }
-  }
-
-  node._vchildren = newVKids
-}
-
-function patchNode(parent, node, oldVNode, newVNode, isSvg) {
-  if (oldVNode === newVNode) {
-  } else if (
-    oldVNode != null &&
-    oldVNode.type === TEXT_NODE &&
-    newVNode.type === TEXT_NODE
-  ) {
-    if (oldVNode.tag !== newVNode.tag) node.nodeValue = newVNode.tag
-  } else if (oldVNode == null || oldVNode.tag !== newVNode.tag) {
-    node = parent.insertBefore(
-      createNode((newVNode = vdomify(newVNode)), isSvg),
-      node
-    )
-    if (oldVNode != null) {
-      parent.removeChild(oldVNode.node)
-    }
-  } else {
-    let oldProps = oldVNode.props, newProps = newVNode.props;
-
-    isSvg = isSvg || newVNode.tag === "svg"
-
-    for (let i in { ...oldProps, ...newProps }) {
-      if (
-        (i === "value" || i === "selected" || i === "checked"
-          ? node[i]
-          : oldProps[i]) !== newProps[i]
-      ) {
-        patchProperty(node, i, oldProps[i], newProps[i], isSvg)
-      }
-    }
-
-    if (newProps.unsafeInnerHtml) {
-      node.innerHTML = newProps.unsafeInnerHtml;
+    if(newVNode._props.dangerouslySetInnerHTML) {
+      newDom.innerHTML = newVNode._props.dangerouslySetInnerHTML.__html;
     } else {
-      patchChildren(node, newVNode.children, isSvg)
+       diffChildren(newDom, newVNode._children, oldVNode);
     }
+
+    // insert at position
+    if (!oldVNode.dom || currentChildIndex != undefined) {
+      dom.insertBefore(
+        (newVNode.dom = newDom),
+        dom.childNodes[currentChildIndex + 1] || null
+      );
+    }
+
+    return (dom._vnode = Object.assign(oldVNode, newVNode));
   }
+};
 
-  return (newVNode.node = node)
+const diffChildren = (parentDom, newChildren, oldVNode) => {
+  const oldChildren = oldVNode._normalizedChildren || [];
+  oldVNode._normalizedChildren = newChildren.concat
+    .apply([], newChildren)
+    .map((child, index) => {
+      // If the vnode has no children we assume that we have a string and
+      // convert it into a text vnode.
+      const nextNewChild = child._children ? child : h('', '' + child);
+
+      // If we have previous children we search for one that matches our
+      // current vnode.
+      const nextOldChild =
+        oldChildren.find((oldChild, childIndex) => {
+          let result =
+            oldChild &&
+            oldChild._type == nextNewChild._type &&
+            oldChild.key == nextNewChild.key &&
+            (childIndex == index && (index = undefined),
+            (oldChildren[childIndex] = 0),
+            oldChild);
+          // if (result) console.log('found vnode', result);
+          return result;
+        }) || {};
+
+      // Continue diffing recursively against the next child.
+      return diff(nextNewChild, parentDom, nextOldChild, index);
+    });
+
+  // remove old children if there are any
+  oldChildren.map(removePatchedChildren)
+
+  return oldVNode;
+};
+
+let listener_deligate = function (e) { this._vev[e.type](e); }
+
+function removePatchedChildren(child) {
+  const { _children = [], _patched } = child
+  // remove children
+  _children.concat(_patched).map(c => c && removePatchedChildren(c))
+  // remove dom
+  child.dom && child.dom.remove()
 }
 
-export let text = (value, node) => new VirtualNode(value, EMPTY_OBJ, EMPTY_ARR, TEXT_NODE, node)
-
-export let createElement = (tag, props, children = EMPTY_ARR) => new VirtualNode(tag, props, children)
-
-export let h = (type, props, ...children) =>
-  createElement(type, props ?? {}, children.flatMap((any) => isStrNum(any) ? text(any) : any))
-
-export let Fragment = (_, c) => c;
-
-export function render(element, children, ctx = {}) {
-  renderContext = ctx;
-  patchChildren(element, Array.isArray(children) ? children : [children]);
-  renderContext = null;
-}
-
-export function destroyRoot(element, clear = true) {
-  if (!element || !element._vchildren) return;
-  if (clear) element.innerHTML = "";
-  delete element._vchildren;
-}
-
-export let elementFactory = (tag) => (propsOrChild, ...children) => {
-  if (propsOrChild instanceof VNode || isStrNum(propsOrChild)) {
-    children.unshift(propsOrChild)
-    propsOrChild = {};
-  }
-  return createElement(tag, propsOrChild, children)
-}
-
-export let Box = elementFactory("div")
-export let Button = elementFactory("button")
-export let Link = elementFactory("link")
-export let Paragraph = elementFactory("p")
-export let Span = elementFactory("span")
-export let Image = elementFactory("img")
-export let Form = elementFactory("form")
-export let Input = elementFactory("input")
-export let Label = elementFactory("label")
-export let Heading = {
-  H1: elementFactory("h1"), H2: elementFactory("h2"),
-  H3: elementFactory("h3"), H4: elementFactory("h4"),
-  H5: elementFactory("h5"), H6: elementFactory("h6")
-}
-export let OrderedList = elementFactory("ol")
-export let List = elementFactory("ul")
-export let ListItem = elementFactory("li")
-export let Section = elementFactory("section")
-export let Main = elementFactory("main")
-export let Nav = elementFactory("nav")
-export let Footer = elementFactory("footer")
+export { h, Fragment, render, diff };

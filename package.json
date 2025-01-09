@@ -5,8 +5,10 @@
   },
   "dependencies": {
     "@types/node": "^22.10.5",
+    "@vue/reactivity": "^3.5.13",
     "dts-bundle-generator": "^9.5.1",
     "esbuild": "^0.24.2",
+    "preact": "^10.25.4",
     "typescript": "^5.7.2"
   }
 }

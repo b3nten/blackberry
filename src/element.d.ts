@@ -13,11 +13,6 @@ export declare abstract class BlackberryElement extends HTMLElement {
 
 export const Component: typeof BlackberryElement;
 
-declare type ReactiveInput = {
-  effect: typeof import("../assets/reactivity@3.5.13").effect,
-  reactive: typeof import("../assets/reactivity@3.5.13").reactive,
-};
-
 export const h: (tag: string, props: Record<string, any> | VNode | string | number, ...children: any[]) => VNode;
 
 export const text: (value: string | number) => VNode;

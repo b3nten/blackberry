@@ -1,16 +1,14 @@
-import * as reactivity from "../assets/reactivity@3.5.13.js"
-export { reactive, ref, effect, computed } from "../assets/reactivity@3.5.13.js"
-import * as superfine from "./vdom.js";
+import { effect, effectScope, reactive } from "@vue/reactivity"
+import { render } from "preact"
+export { h, Fragment } from "preact"
 
 Symbol.metadata ??= Symbol('metadata');
 
-const toKebabCase = (str) => str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
-
-const observedAttributes = new Map()
+let observedAttributes = new Map()
 
 let globalSheets = null;
 
-function getGlobalStyleSheets() {
+let getGlobalStyleSheets = () => {
   if (globalSheets === null) {
     globalSheets = Array.from(document.styleSheets)
       .map(x => {
@@ -24,7 +22,7 @@ function getGlobalStyleSheets() {
   return globalSheets;
 }
 
-function addGlobalStylesToShadowRoot(shadowRoot) {
+let addGlobalStylesToShadowRoot = (shadowRoot) => {
   shadowRoot.adoptedStyleSheets.push(
     ...getGlobalStyleSheets()
   );
@@ -63,15 +61,15 @@ export class BlackberryElement extends HTMLElement {
       addGlobalStylesToShadowRoot(this.shadowRoot);
     }
 
-    this.rootEffectScope = reactivity.effectScope()
+    this.rootEffectScope = effectScope()
   }
 
   connectedCallback() {
     const self = this;
     this.rootEffectScope.run(() => {
       this.onMount?.()
-      reactivity.effect(() => {
-        superfine.render(this.shadowRoot, this.render.call(self), { host: this });
+      effect(() => {
+        render(this.render.call(self), this.shadowRoot, { host: this });
       })
       this.onMounted?.();
     })
@@ -88,23 +86,13 @@ export class BlackberryElement extends HTMLElement {
     throw new Error("You must implement the render method in your custom element.");
   }
 
-  attrs = reactivity.reactive({});
-
-  // stored @state values
-  _decoratedStates = reactivity.reactive({});
+  attrs = reactive({});
+  _decoratedStates = reactive({});
 }
 
 export const Component = BlackberryElement;
 
 export const css = String.raw
-
-export const h = superfine.h;
-
-export const text = superfine.text;
-
-export const Fragment = superfine.Fragment;
-
-export const elementFactory = superfine.elementFactory;
 
 export function state() {
   return function (_, { kind, name }) {

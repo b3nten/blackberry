@@ -17,13 +17,13 @@
 
         <!--	Init	-->
         <script type="module">
-            import { start } from "/dist/blackberry@0.0.1.js";
+            import { start, Component, h } from "/dist/blackberry@0.0.1.js";
 
             start();
 
             const lenis = new Lenis({
                 autoRaf: true,
-                lerp: 0.5,
+                lerp: 0.15,
             });
         </script>
 
@@ -215,20 +215,54 @@
             }
         </style>
     </head>
+    <template>
+        <script type="module">
+          import { render, h, text, Fragment } from "/src/renderer.js"
+
+          let Inputs = h(Fragment, {},
+            h("input", { type: "email", placeholder: "Email" }),
+            h("input", { type: "password", placeholder: "Password" })
+          )
+
+          let Form = () => h("form", {},
+            h("p", {}, text("Email:")),
+            h(Inputs, {}),
+            h("button", { type: "submit" }, text("Submit"),
+          ))
+
+          const app = h("main", { foo: "bar" },
+            text("Hello, world!"),
+            h("button", { onclick: () => alert("WOO") }, text("Click me!")),
+            h(Fragment, {},
+              h("span", {}, text("Hello")),
+              h("span", {}, text("World")),
+            ),
+            h("div", {}, [
+              h("h1", {}, text("TITLE"))
+            ]),
+            h(Form, {}),
+          )
+
+          render(document.getElementById("root"), app)
+
+          console.log(document.getElementById("root")._vnode)
+        </script>
+        <div id="root">
+
+        </div>
+    </template>
     <body>
-
-        <div id="test"></div>
-
         <!-- ##Counter Component -->
-
+        <test-component></test-component>
         <template blackberry="counter-component" attributes="initial">
             <button
                 @click="increment"
                 :text="`the count is ${count}`"
             ></button>
             <script>
+
                 $state.count = Number($attributes.initial ?? 0);
-                $state.increment = () => $state.count++;
+                $state.increment = () => $state.count++
                 $effect(() => console.log("count changed", $state.count));
             </script>
             <style>
@@ -318,7 +352,7 @@
                 $state.className = `language-` + $attributes.language;
                 $state.content = Prism.highlight(content.join("\n").trim(), Prism.languages[$attributes.language], $attributes.language);
             </script>
-            <pre><code :class="className" :unsafe-inner-html="content"></code></pre>
+            <pre><code :class="className" :html="content"></code></pre>
             <style>
                 pre[class*="language-"],
                 code[class*="language-"] {

@@ -1,5 +1,6 @@
 export { default as start } from "../src/template.js"
 export * from "../src/element.js"
-export * from "../assets/reactivity@3.5.13.js"
+export { ref, reactive, effect, computed } from "@vue/reactivity"
 
-import "../src/jsx.js"
+// export { render, h, Fragment } from "preact"
+// export { ref, reactive, effect, computed, effectScope } from "@vue/reactivity"

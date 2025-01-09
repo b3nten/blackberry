@@ -1,35 +1,29 @@
+import { reactive, effect } from "@vue/reactivity";
+import { h, Fragment } from "preact";
+import { BlackberryElement } from "./element.js";
 
-import { effect, reactive, effectScope } from "../assets/reactivity@3.5.13.js"
-import { Fragment } from "./vdom.js";
-import { createElement } from "./vdom.js";
-import { h, text, render } from "./vdom.js"
-
-const isLazy = Symbol("lazy");
-class Lazy { constructor(fn) { this.fn = fn };[isLazy] = true }
-const unwrap = (v) => v[isLazy] ? v.fn() : v;
-
-class Expression {
+class expression {
   static Cache = new Map();
-  constructor(expression) {
-    if (Expression.Cache.has(expression)) { this.call = Expression.Cache.get(expression); }
-    const safeFunction = () => {
+  constructor(str) {
+    if (expression.Cache.has(str)) { this.call = expression.Cache.get(str); }
+    let safeFunction = () => {
       try {
-        let func = new Function(["scope"], `with (scope) {  return ${expression}; }`)
+        let func = new Function(["scope"], `with (scope) { return ${str}; }`)
         Object.defineProperty(func, "name", {
-          value: `[expression]: ${expression}`,
+          value: `[expression]: ${str}`,
         })
         return func
       } catch (error) {
-        console.log(`Error while compiling expression: ${expression}`, error)
+        console.log(`Error while compiling expression: ${str}`, error)
         return () => ""
       }
     }
-    Expression.Cache.set(expression, safeFunction())
-    this.call = Expression.Cache.get(expression)
+    expression.Cache.set(str, safeFunction())
+    this.call = expression.Cache.get(str)
   }
 }
 
-function resolveScopePath(key, scope) {
+function resolve_scoped_path(key, scope) {
   let segments = key.split(".")
   let value = scope
   for (let segment of segments) {
@@ -38,93 +32,74 @@ function resolveScopePath(key, scope) {
   return value
 }
 
-function compileIntermediary(element, scope) {
-
-  if(!element) return null
-
+const compile_node = (element, scope) => {
   if (Array.isArray(element)) {
-    return element.map(e => compileIntermediary(e, scope))
+    return h(Fragment, {}, element.flatMap((el) => compile_node(el, scope)))
   }
 
   if (element.nodeType != 1) {
-    return new text(element.nodeValue)
+    return element.nodeValue
   }
 
   let tag = element.tagName.toLowerCase()
 
-  let attributes = {}, children = [], show, eachStatement, eachVar, ifCondition, childExpression;
+  let attributes = {}, children = [], if_expression;
 
   for (let attr of element.attributes) {
-    let key = attr.nodeName, value = attr.nodeValue, expression, modifier;
+    let key = attr.nodeName, value = attr.nodeValue;
     if (attr.nodeName[0] === ":") {
-      expression = true;
-      key = attr.nodeName.slice(1)
-    } else if (attr.nodeName.includes(":")) {
-      expression = true;
-      key = attr.nodeName.split(":")[0];
-      modifier = attr.nodeName.split(":")[1];
-    }
-
-    if (expression) {
-      if (key === "text") {
-        childExpression = new Lazy(() => text(new Expression(value).call(scope)))
-      } else if (key === "unsafe-inner-html") {
-        attributes["unsafeInnerHtml"] = new Lazy(() => new Expression(value).call(scope))
-      } else if (key === "show") {
-        show = new Expression(attr.nodeValue)
-      } else if (key === "if") {
-        ifCondition = new Expression(attr.nodeValue)
-      } else if (key === "each" && modifier) {
-        eachStatement = new Expression(value)
-        eachVar = modifier
+      let exp = new expression(attr.nodeValue)
+      if (attr.nodeName === ":text") {
+        children.push(exp.call(scope))
+      } else if (attr.nodeName === ":html") {
+        attributes.dangerouslySetInnerHTML = { __html: exp.call(scope) }
+      } else if (attr.nodeName === ":if") {
+        if_expression = exp
       } else {
-        attributes[key] = new Lazy(() => new Expression(value).call(scope))
+        attributes[attr.nodeName.slice(1)] = exp.call(scope)
       }
+    } else if (key[0] === "@") {
+      attributes[`on${key[1].toUpperCase()}${key.slice(2)}`] = (e) => resolve_scoped_path(value, scope)(e)
     } else {
-      if (key[0] === "@") {
-        attributes["on" + key.slice(1)] = new Lazy(() => resolveScopePath(value, scope))
-      } else {
-        attributes[key] = value
-      }
+      attributes[key] = value
     }
   }
 
-  children.push(childExpression, ...(Array.from((tag == 'template' ? element.content : element).childNodes)))
-
-  for (let i = 0; i < children.length; i++) {
-    if (children[i] instanceof Lazy) continue;
-    children[i] = compileIntermediary(children[i], scope)
+  for (let child of Array.from((tag == 'template' ? element.content : element).childNodes)) {
+    children.push(child.tagName?.toLowerCase() === "template" ? compile_template(child, scope) : compile_node(child, scope))
   }
 
-  return new Lazy(
-    show ? (() => show(scope) ? createElement(tag, attributes, children) : null)
-      : () => createElement(tag, attributes, children)
-  )
+  return if_expression && !if_expression.call(scope) ? [] : h(tag, attributes, children)
 }
 
-function renderIntermediaryTemplate(lazy) {
-  if(!lazy) return null
-  if (Array.isArray(lazy)) {
-    return lazy.map(l => renderIntermediaryTemplate(l))
-  }
+const compile_template = (element, scope) => {
+  let each_key, each_expression, if_expression;
 
-  let vnode = unwrap(lazy)
-  if (!vnode) return null
-
-  if (vnode.props) {
-    for (let k in vnode.props) {
-      if (vnode.props[k] instanceof Lazy) {
-        vnode.props[k] = unwrap(vnode.props[k])
-      }
+  for (let attr of element.attributes) {
+    if (attr.nodeName.startsWith("each")) {
+      each_key = attr.nodeName.split(":")[1].trim();
+      each_expression = new expression(attr.nodeValue);
+    }
+    if (attr.nodeName === ":if") {
+      if_expression = new expression(attr.nodeValue);
     }
   }
 
-  if (vnode.children) vnode.children = vnode.children.map(c => renderIntermediaryTemplate(c))
+  let children = [];
+  let nodes = Array.from(element.content.children);
 
-  return vnode
+  if (each_key) {
+    let values = each_expression.call(scope);
+    for (let i = 0; i < values.length; i++) {
+      let new_scope = { ...scope, [each_key]: values[i] };
+      children.push(compile_node(nodes, new_scope ));
+    }
+  }
+
+  return if_expression && !if_expression.call(scope) ? [] : children
 }
 
-function constructComponentFromElement(element) {
+function construct_from_element(element) {
   if (element.tagName !== "TEMPLATE" || !(typeof element.getAttribute("blackberry") === "string")) {
     return;
   }
@@ -150,85 +125,62 @@ function constructComponentFromElement(element) {
 
   element.remove();
 
-  const scopedSheet = new CSSStyleSheet();
-  scopedSheet.replaceSync(style ?? "");
-  const sheets = [scopedSheet];
-
   const setup = new Function(
     "$element",
     "$state",
     "$attributes",
-    "$props",
     "$cleanup",
     "$reactive",
     "$effect",
     script,
   );
 
-  customElements.define(tagname, class extends HTMLElement {
-
+  customElements.define(tagname, class extends BlackberryElement {
     static get observedAttributes() { return attrs; }
+    static styles = style;
 
-    attributeChangedCallback(name, oldValue, newValue) {
-      if (oldValue === newValue) return;
-      this.__blackberry_attrs[name] = newValue;
-    }
-
-    constructor() {
-      super();
-      this.attachShadow({ mode: "open" });
-      this.shadowRoot.adoptedStyleSheets = sheets;
-      this.rootEffectScope = effectScope()
-    }
-
-    connectedCallback() {
+    onMount() {
       const data = reactive({});
-      data.$element = this;
-      data.$attributes = this.__blackberry_attrs;
-      data.$props = this.__blackberry_props;
 
-      const cleanup = (...fns) => void this.__blackberry_cleanupFns.push(...fns);
+      data.$element = this;
+      data.$attributes = this.attrs;
+
+      const cleanup = (...fns) => void this.cleanup_fns.push(...fns);
 
       setup(
         this,
         data,
-        this.__blackberry_attrs,
-        this.__blackberry_props,
+        this.attrs,
         cleanup,
         reactive,
         effect
       );
 
-      this.renderFn = compileIntermediary(Array.from(markup.children), data)
-
-      this.rootEffectScope.run(() => {
-        effect(() => {
-          render(this.shadowRoot, renderIntermediaryTemplate(this.renderFn), { host: this })
-        })
-      })
+      this.__internal_data = data;
     }
 
-    disconnectedCallback() {
-      this.__blackberry_cleanupFns.forEach((fn) => fn());
-      this.renderEffect.effect.stop();
+    render() {
+      return compile_node(Array.from(markup.children), this.__internal_data)
     }
 
-    __blackberry_attrs = reactive({});
-    __blackberry_props = reactive({});
-    __blackberry_cleanupFns = [];
-  });
+    onUnmount() {
+      this.cleanup_fns.forEach((fn) => fn());
+    }
+
+    cleanup_fns = [];
+  })
 }
 
-export default function initBlackberry() {
+export default function init_blackberry() {
   requestIdleCallback(() => {
-    document.querySelectorAll("template").forEach((element) => constructComponentFromElement(element));
+    document.querySelectorAll("template").forEach((element) => construct_from_element(element));
     document.body.removeAttribute("blackberry-cloak");
   })
 
-  const mutationObserver = new MutationObserver((mutations) => {
+  let mutationObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
-        if (node.tagName === "TEMPLATE") { constructComponentFromElement(node); }
+        if (node.tagName === "TEMPLATE") { construct_from_element(node); }
       });
     });
   });
