@@ -1,10 +1,8 @@
 const EMPTY_ARR = [],
   EMPTY_OBJ = {},
-  ROOT = 0,
-  FRAGMENT = 1,
-  TEXT = 2;
-
-let render_context = EMPTY_OBJ;
+  render_context = { value: null },
+  ROOT = Symbol("root"),
+  TEXT = Symbol("text");
 
 let is_vnode = (v) => v instanceof vnode;
 
@@ -18,15 +16,8 @@ let to_prim_val = (p) =>
 let to_vnode = (p) =>
   is_vnode(p) ? p : text(to_prim_val(p));
 
-export let select_between = (prev_el, next_el) => {
-  let result = [];
-  while (prev_el.nextSibling && prev_el.nextSibling !== next_el) {
-    result.push((prev_el = prev_el.nextSibling));
-  }
-  return result;
-};
-
 class vnode {
+  static is(x) { return x instanceof vnode; }
   constructor(type, props, children) {
     this.type = type;
     this.props = props ?? {};
@@ -38,9 +29,9 @@ class vnode {
   key_map = {}
   is_element() { return typeof this.type === "string"; }
   is_text() { return this.type === TEXT; }
-  is_fragment() { return this.type === FRAGMENT || this.type === Fragment }
+  is_fragment() { return this.type === Fragment }
   is_function() { return typeof this.type === "function"; }
-  v_children;
+  computed;
 }
 
 export let text = (text) => {
@@ -56,31 +47,47 @@ export let h = (type, props, ...children) => {
 };
 
 export let Fragment = (props, ...children) => {
-  return new vnode(FRAGMENT, props, props.children ?? children);
+  return new vnode(Fragment, props, props.children ?? children);
 };
 
 export let render = (v_dom, element, context = {}) => {
-  render_context = context;
-  if (!element.v_node) {
-    element._vnode = new vnode(ROOT, {}, []);
+  render_context.value = context;
+  if(!element._saved) element._saved = element.cloneNode(true);
+  if (!element._vnode) element._vnode = new vnode(ROOT, {}, []);
+  diff_element(element, h(ROOT, {}, [v_dom]) );
+  render_context.value = {};
+  return () => destroy_root(element);
+};
+
+let diff_element = (element, new_vnode) => {
+
+  patch_props(element, element._vnode?.props ?? {}, new_vnode.props);
+
+  let old_vnode = element._vnode,
+    old_children = old_vnode?.children ?? EMPTY_ARR,
+    new_children = new_vnode.children,
+    len = Math.max(old_children.length, new_children.length);
+
+  console.log({
+    old_vnode,
+    old_children,
+    new_children,
+    len
+  })
+
+  for (let i = 0; i < len; i++) {
+    diff_node(element, old_children[i], new_children[i]);
   }
-  diff(element, new vnode(ROOT, {}, [v_dom]));
-  render_context = EMPTY_OBJ;
+
+  element._vnode = new_vnode;
   return element;
 };
 
-let diff = (element, v_node) => {
+let diff_node = (parent, old_vnode, new_vnode) => {
 
-  if (v_node.is_element()) {
-    patch_props(element, element._vnode?.props ?? {}, v_node.props);
-  }
+}
 
-  element._vnode = v_node;
-  return element;
-};
-
-let listener_deligate = function (e) { this._vev[e.type](e); }
-
+let listener_delegate = function (e) { this._vev[e.type](e); }
 let patch_props = (el, old_props, new_props) => {
   for (let key in old_props) {
     if (!new_props[key]) {
@@ -92,10 +99,14 @@ let patch_props = (el, old_props, new_props) => {
     if (old_props[key] !== new_props[key]) {
       if (key.startsWith("on")) {
         let host = render_context.host ?? el;
-        if (!((el._vev ?? (el._vev = {}))[key.slice(2)] = (new_props[key] ? (e) => new_props[key].call(host, e) : undefined))) {
-          el.removeEventListener(key.slice(2), listener_deligate);
+        if (
+          !((el._vev ?? (el._vev = {}))[key.slice(2)]
+            = (new_props[key]
+              ? (e) => new_props[key].call(host, e)
+              : undefined))) {
+          el.removeEventListener(key.slice(2), listener_delegate);
         } else if (!old_props[key]) {
-          el.addEventListener(key.slice(2), listener_deligate);
+          el.addEventListener(key.slice(2), listener_delegate);
         }
       } else if (key in el) {
         el[key] = new_props[key];
@@ -106,19 +117,9 @@ let patch_props = (el, old_props, new_props) => {
   }
 }
 
-let diff_vnodes = (old_vnode, new_vnode, first_el, last_el) => {
-
-
-
+let destroy_root = (root) => {
+  if(root._saved) {
+    root.replaceWith(root._saved);
+    root._saved = null;
+  }
 }
-
-/*
-
-Conceptually, diffing two nodes happens in the
-section containing the nodes, not on a parent element.
-
-<key={1}>    <key={2}>
-<key={2}>    <key={3}>
-<key={3}>    <key={1}>
-
-*/

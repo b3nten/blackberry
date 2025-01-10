@@ -56,11 +56,15 @@ const compile_node = (element, scope) => {
       } else if (attr.nodeName === ":if") {
         if_expression = exp
       } else {
-        attributes[attr.nodeName.slice(1)] = exp.call(scope)
+        attributes["attr:" + attr.nodeName.slice(1)] = exp.call(scope)
       }
     } else if (key[0] === "@") {
       attributes[`on${key[1].toUpperCase()}${key.slice(2)}`] = (e) => resolve_scoped_path(value, scope)(e)
-    } else {
+    } else if (key[0] === ".") {
+      let exp = new expression(value)
+      let value = exp.call(scope)
+      attributes["prop:" + key.slice(1)] = value
+    }else {
       attributes[key] = value
     }
   }

@@ -98,7 +98,11 @@ const diff = (newVNode, dom, oldVNode, currentChildIndex) => {
               newDom.addEventListener(name.slice(2).toLowerCase(), listener_deligate);
             }
           } else if (value != (oldVNode._props && oldVNode._props[name])) {
-            if (name in newDom || (name = name.toLowerCase()) in newDom) {
+            if (name.startsWith("prop:")) {
+              newDom[name.slice(5)] = value;
+            } else if (name.startsWith("attr:")) {
+              newDom.setAttribute(name.slice(5), value);
+            } else if (name in newDom || (name = name.toLowerCase()) in newDom) {
               newDom[name] = value;
             } else if (value != null) {
               newDom.setAttribute(name, value);
