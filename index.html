@@ -146,7 +146,7 @@
                 margin: 1rem 0;
                 font-family: sans-serif;
                 font-size: 1.125rem;
-                line-height: 100%;
+                line-height: 140%;
             }
 
             .header-logo-container {
@@ -498,6 +498,55 @@
             </style>
         </template>
 
+        <!-- ##Tab Bar Component -->
+        <template blackberry="tab-bar" attributes="tabs">
+            <script>
+              $state.tabs = $attributes.tabs ? JSON.parse($attributes.tabs) : []
+              $state.setTab = (name) => () => $state.activeTab = name;
+              $state.activeTab = $state.tabs[0];
+            </script>
+            <ul id="tab-bar">
+                <template each:tab="tabs">
+                    <li :text="tab" @click="setTab(tab)" :active="activeTab === tab"></li>
+                </template>
+            </ul>
+            <div id="content">
+                <slot :name="activeTab"></slot>
+            </div>
+            <style>
+                :host {
+                    display: block;
+                    background: var(--blackberry-main);
+                    border: 4px solid var(--blackberry-light);
+                    box-shadow: 8px 8px 0 var(--blackberry-dark);
+                    padding: 0 1rem;
+                    margin: 1rem 0;
+                    font-family: "VT323", monospace;
+                    font-size: 1.5rem;
+                }
+                #tab-bar {
+                    display: flex;
+                    list-style: none;
+                    margin: 0;
+                    padding: 0;
+                    width: 100%;
+                    background: var(--blackberry-light);
+                    & > li {
+                        cursor: pointer;
+                        margin: 0;
+                        padding: .25rem .5rem;
+                        background: var(--blackberry-light);
+                        &[active=true] {
+                            background: var(--blackberry-accent);
+                        }
+                    }
+                }
+                #content {
+                    padding: 1rem;
+                }
+            </style>
+        </template>
+
         <!-- ##Page Content -->
         <div class="container">
 
@@ -518,14 +567,15 @@
             <spacer-line></spacer-line>
 
             <!-- ##Overview -->
-            <h2 class="title">Overview</h2>
-            <p class="text">
-                Blackberry is a small frontend library providing reactivity, composability,
-                scoped styles, and a simple API to make webdev fun again.
-            </p>
+            <section id="section-overview">
+                <h2 class="title">Overview</h2>
+                <p class="text">
+                    Blackberry is a small frontend library providing reactivity, composability,
+                    scoped styles, and a simple API to make webdev fun again.
+                </p>
 
-            <!-- Example -->
-            <code-block language="html" content='
+                <!-- Example -->
+                <code-block language="html" content='
                 <template blackberry="counter-component" attributes="initial">
 
                     <button @click="increment" :text="`the count is ${count}`"></button>
@@ -541,191 +591,182 @@
                     </style>
 
                 </template>
-            '></code-block>
+                '></code-block>
 
-            <code-block language="html" content='
+                <code-block language="html" content='
                 <counter-component initial="3"></counter-component>
-            '></code-block>
+                '></code-block>
 
-            <counter-component initial="3"></counter-component>
+                <counter-component initial="3"></counter-component>
 
-            <p class="text">
+                <p class="text">
                 Blackberry.js is inspired by
                 <a href="https://strawberry.quest" target="_blank">Strawberry.js</a>,
                 and is designed to be used as a lightweight html-first
                 alternative to frameworks like Vue and Svelte without
                 requiring build tooling or a complex dependency tree.
-            </p>
+                </p>
+            </section>
 
             <spacer-line></spacer-line>
 
-            <!-- ##SETUP -->
+            <section id="section-guide">
+                <!-- ##GUIDE -->
+                <h2 class="title">Guide</h2>
+                <p class="text">
+                    Blackberry has a very simple API. Components are defined using
+                    the <inline-code>template</inline-code> tag with a <inline-code>blackberry</inline-code>
+                    attribute signifying the component name, which must contain a hyphen. Inside of the template,
+                    you can define elements the component should render, a <inline-code>script</inline-code>
+                    tag for state and logic, and a <inline-code>style</inline-code> tag for styling.
+                </p>
+                <code-block language="html" content='
+                    <template blackberry="hello-world" ">
+                        <h1>Hello, world!</h1>
+                        <script>
+                            console.log("Hello, world!")
+                        </script>
+                        <style>
+                            h1 { color: red; }
+                        </style>
+                    </template>
+                '></code-block>
 
-            <h2 class="title">Setup</h2>
-            <p class="text">
-                To get started, include the Blackberry.js script in your html file.
-                Calling <inline-code>Blackberry.start()</inline-code> parses
-                and registers any components defined in the document. Subsequent
-                components can be defined in the document and
-                Blackberry will automatically register them.
-            </p>
-
-            <code-block language="html" content='
-                <script type="module">
-                    import Blackberry from "https://esm.sh/blackberry.js"
-                    Blackberry.start()
-                </script>
-            '></code-block>
-
-            <spacer-line></spacer-line>
-
-            <!-- ##GUIDE -->
-            <h2 class="title">Guide</h2>
-            <p class="text">
-                Blackberry has a very simple API. Components are defined using
-                the <inline-code>template</inline-code> tag with a <inline-code>blackberry</inline-code>
-                attribute signifying the component name, which must contain a hyphen. Inside of the template,
-                you can define elements the component should render, a <inline-code>script</inline-code>
-                tag for state and logic, and a <inline-code>style</inline-code> tag for styling.
-            </p>
-            <code-block language="html" content='
-                <template blackberry="hello-world" ">
-                    <h1>Hello, world!</h1>
-                    <script>
-                        console.log("Hello, world!")
+                <h3 class="title">Setup</h3>
+                <p class="text">
+                    Include the Blackberry.js script in your html file.
+                    Calling <inline-code>Blackberry.start()</inline-code> parses
+                    and registers any components defined in the document. Subsequent
+                    components can be defined in the document and
+                    Blackberry will automatically register them.
+                </p>
+                <code-block language="html" content='
+                    <script type="module">
+                        import Blackberry from "https://esm.sh/blackberry.js"
+                        Blackberry.start()
                     </script>
-                    <style>
-                        h1 { color: red; }
-                    </style>
-                </template>
-            '></code-block>
+                '></code-block>
 
-            <h3 class="title">Script</h3>
-            <p class="text">
-                Blackberry components can define a top level <inline-code>script</inline-code> tag, which
-                acts similarly to the script tag in Vue or Svelte components. It can be used to define
-                reactive state, effects, cleanup functions, and access the underlying dom element of the component.
-            </p>
+                <h3 class="title">Script Tag</h3>
+                <p class="text">
+                    Blackberry components can define a top level <inline-code>script</inline-code> tag, which
+                    acts similarly to the script tag in Vue or Svelte components. It can be used to define
+                    reactive state, effects, cleanup functions, and access the underlying dom element of the component.
+                </p>
 
-            <h4 class="title">State</h4>
-            <p class="text">
-                Code inside of the <inline-code>script</inline-code> tag has access to a <inline-code>$state</inline-code> object
-                which can be used to store reactive data. Any changes to the state will trigger a re-render of the component.
-                This data can be directly accessed inside of the component's template.
-            </p>
-            <code-block language="html" content='
-                <script>
-                    $state.count = 0;
-                    $state.actions = {
-                        increment: () => $state.count++
-                    }
-                </script>
-                <button @click="actions.increment">
-                    <span :text="`the count is ${count}`"></span>
-                </button>
-            '></code-block>
-
-            <h4 class="title">Attributes</h4>
-            <p class="text">
-                Attributes are values that can be passed into a component.
-                They can be defined on a component's template tag using a comma seperated
-                <inline-code>attributes</inline-code> attribute, and accessed via the reactive <inline-code>$attributes</inline-code> object.
-            </p>
-            <code-block language="html" content='
-                <template blackberry="attribute-example" attributes="foo, bar">
+                <h4 class="title">State</h4>
+                <p class="text">
+                    Code inside of the <inline-code>script</inline-code> tag has access to a <inline-code>$state</inline-code> object
+                    which can be used to store reactive data. Any changes to the state will trigger a re-render of the component.
+                    This data can be directly accessed inside of the component's template.
+                </p>
+                <code-block language="html" content='
                     <script>
-                        // attributes can be accessed via the $attributes object
-                        $state.foo = $attributes.foo;
+                        $state.count = 0;
+                        $state.actions = {
+                            increment: () => $state.count++
+                        }
                     </script>
-                    <h1 :text="foo"></h1>
-                    <!-- As well as inside of the template -->
-                    <h2 :text="$attributes.bar"></h2>
-                </template>
+                    <button @click="actions.increment">
+                        <span :text="`the count is ${count}`"></span>
+                    </button>
+                '></code-block>
 
-                <attribute-example foo="Hello" bar="World"></attribute-example>
-            '></code-block>
+                <h4 class="title">Attributes</h4>
+                <p class="text">
+                    Attributes are values that can be passed into a component.
+                    They can be defined on a component's template tag using a comma seperated
+                    <inline-code>attributes</inline-code> attribute, and accessed via the reactive <inline-code>$attributes</inline-code> object.
+                </p>
+                <code-block language="html" content='
+                    <template blackberry="attribute-example" attributes="foo, bar">
+                        <script>
+                            // attributes can be accessed via the $attributes object
+                            $state.foo = $attributes.foo;
+                        </script>
+                        <h1 :text="foo"></h1>
+                        <!-- As well as inside of the template -->
+                        <h2 :text="$attributes.bar"></h2>
+                    </template>
 
-            <h4 class="title">Effects</h4>
-            <p class="text">
-                The effect function is available inside of the script tag via the <inline-code>$effect</inline-code> value.
-                They are automatically run when the component is rendered and whenever a reactive value inside the scope
-                of the callback changes.
-            </p>
-            <code-block language="html" content='
-                <script>
-                    $effect(() => console.log("count changed", $state.count));
-                </script>
-                <button @click="increment" :text="`the count is ${count}`"></button>
-            '></code-block>
+                    <attribute-example foo="Hello" bar="World"></attribute-example>
+                '></code-block>
 
-            <h4 class="title">Element</h4>
-            <p class="text">
-                The underlying root element of a Blackberry element can be accessed via the <inline-code>$element</inline-code> value.
-                This can be useful for accessing the dom element directly, which is needed to access properties on the element.
-            </p>
+                <h4 class="title">Effects</h4>
+                <p class="text">
+                    The effect function is available inside of the script tag via the <inline-code>$effect</inline-code> value.
+                    They are automatically run when the component is rendered and whenever a reactive value inside the scope
+                    of the callback changes.
+                </p>
+                <code-block language="html" content='
+                    <script>
+                        $effect(() => console.log("count changed", $state.count));
+                    </script>
+                    <button @click="increment" :text="`the count is ${count}`"></button>
+                '></code-block>
 
-            <h4 class="title">Cleanup</h4>
-            <p class="text">
-                Cleanup functions can be defined in the script tag using the <inline-code>$cleanup</inline-code> global and will be run when the component is removed from the dom.
-                This can be useful for disposing any resources the component may have aquired.
-            </p>
+                <h3 class="title">Templating</h3>
 
-            <h4 class="title">Reactive </h4>
-            <p class="text">
-                If you want to create other reactive stores in your component, you can use the <inline-code>$reactive</inline-code> function.
-            </p>
+                <p class="text">
+                    Templates can use directives to bind data to elements, listen for events, and conditionally render elements.
+                    Directives are javascript expressions that are evaluated in the context of the component.
+                </p>
 
-            <h3 class="title">Templating</h3>
+                <h4 class="title">Attributes</h4>
+                <p class="text">
+                    The <inline-code>:</inline-code> directive binds the value of the expression to the attribute.
+                    Example: <inline-code>:foo="`the count is ${count}`"</inline-code> will set the attribute <inline-code>foo</inline-code> to the value of the expression.
+                </p>
 
-            <h4 class="title">Directives</h4>
-            <p class="text">
-                Templates can use directives to bind data to elements, listen for events, and conditionally render elements.
-                Directives are javascript expressions that are evaluated in the context of the component.
-            </p>
+                <h4 class="title">Text</h4>
+                <p class="text">
+                    The <inline-code>:text</inline-code> directive binds it's value as the text content of the node.
+                </p>
 
-            <h4 class="title">Attribute Directive</h4>
-            <p class="text">
-                The <inline-code>:</inline-code> directive binds the value of the expression to the attribute.
-                Example: <inline-code>:foo="`the count is ${count}`"</inline-code> will set the attribute <inline-code>foo</inline-code> to the value of the expression.
-            </p>
+                <h4 class="title">If</h4>
+                <p class="text">
+                    The <inline-code>:if</inline-code> directive conditionally renders the node based on the value of the expression.
+                </p>
 
-            <h4 class="title">:text</h4>
-            <p class="text">
-                This directive binds it's value as the text content of the node.
-            </p>
+                <h4 class="title">HTML</h4>
+                <p class="text">
+                    The <inline-code>:html</inline-code> directive binds it's value as the innerHTML of the node.
+                    <x-note>Be careful when using this directive as it can be a security risk.</x-note>
+                </p>
 
-            <h4 class="title">:if</h4>
-            <p class="text">
-                The :if directive conditionally renders the node based on the value of the expression.
-            </p>
+                <h4 class="title">Ref</h4>
+                <p class="text">
+                    The <inline-code>:ref</inline-code> directive binds the value of the
+                    dom element to the ref's <inline-code>value</inline-code> property.
+                </p>
+                <code-block language="html" content='
+                    <button :ref="buttonRef" @click="() => buttonRef.value.innerText = `clicked!`">Click me!</button>
+                    <script>
+                        $state.buttonRef = { value: null }
+                    </script>
+                '></code-block>
 
-            <h4 class="title">:html</h4>
-            <p class="text">
-                This directive binds it's value as the innerHTML of the node.
-                <x-note>Be careful when using this directive as it can be a security risk.</x-note>
-            </p>
+                <h4 class="title">Events</h4>
+                <p class="text">
+                    The <inline-code>@</inline-code> directive binds it's value as an event listener.
+                    Example: <inline-code>@click="increment"</inline-code>
+                </p>
+                <code-block language="html" content='
+                    <button
+                        @click="() => alert(`boo!`)"
+                        @mouseover="() => console.log(`hovered!`)"
+                        @mouseleave="() => console.log(`left!`)"
+                    >
+                        boo
+                    </button>
+                '></code-block>
 
-            <h4 class="title">:ref</h4>
-            <p class="text">
-                Refs are used to access the underlying dom element of a component.
-                The <inline-code>:ref</inline-code> directive binds the value of the
-                expression to the ref's <inline-code>value</inline-code> property.
-            </p>
-
-            <h4 class="title">Event directive</h4>
-            <p class="text">
-                The <inline-code>@</inline-code> directive binds it's value as an event listener.
-                Example: <inline-code>@click="increment"</inline-code>
-            </p>
-
-            <h4 class="title">each:key</h4>
-            <p class="text">
-                The <inline-code>each:key</inline-code> directive renders a list of elements for each item in an array. It must be used on a template tag,
-                and the template tag must have an <inline-code>each</inline-code> attribute with the value of the array to iterate over.
-                The <inline-code>key</inline-code> attribute is used to specify a unique identifier for each item in the list.
-            </p>
-            <code-block language="html" content='
-                <template blackberry="list-example">
+                <h4 class="title">Lists</h4>
+                <p class="text">
+                    The <inline-code>each</inline-code> directive renders a list of elements for each item in an array.
+                    It must be used on a template tag, and follows the format <inline-code>each:item="items"</inline-code>.
+                </p>
+                <code-block language="html" content='
                     <ul>
                         <template each:item="items">
                             <li :text="item.name" :key="item.id"></span></li>
@@ -738,51 +779,203 @@
                             { id: 3, name: "cherry" }
                         ]
                     </script>
+                '></code-block>
+
+                <h4 class="title">Property Directive</h4>
+                <p class="text">
+                    The <inline-code>.</inline-code> directive binds the value of the expression to the element as a property.
+                    This is useful for passing values other than strings to components or setting properties on elements.
+                </p>
+                <code-block language="html" content='
+                    <template blackberry="parent-component">
+                        <child-component .hello="() => console.log(`Hello from parent!`)"></child-component>
+                    </template>
+
+                    <template blackberry="child-component">
+                        <button @click="$element.hello">Click me!</button>
+                    </template>
+                '></code-block>
+
+                <h4 class="title">Slots</h4>
+                <p class="text">
+                    Slots are used to pass content into a component. They are defined in the component's template using the <inline-code>slot</inline-code> tag.
+                    The content passed into the slot is rendered in place of the slot tag.
+                </p>
+                <code-block language="html" content='
+                    <template blackberry="slot-example">
+                        <div>
+                            <slot></slot>
+                        </div>
+                    </template>
+
+                    <slot-example>
+                        <h1>Hello, world!</h1>
+                    </slot-example>
+                '></code-block>
+
+                <h3 class="title">Styling</h3>
+                <p class="text">
+                    Styles can be defined in the <inline-code>style</inline-code> tag of a component.
+                    Styles are scoped to the component and do not leak out.
+                </p>
+                <p class="text">
+                    Because Blackberry components use the shadow-dom, they do not have access to global stylesheets by default.
+                    If you want your component to inherit styles from the outside document,
+                    you can set the <inline-code>global-styles</inline-code> attribute on a component template.
+                </p>
+            </section>
+
+            <spacer-line></spacer-line>
+
+            <section id="todo-example">
+                <h2 class="title">Todo Example</h2>
+                <template blackberry="todo-component">
+                    <script>
+                      $state.input = { value: null }
+                      $state.todos = [
+                        { value: "learn blackberry", completed: true },
+                        { value: "download blackberry", completed: false },
+                        { value: "build something cool", completed: false },
+                      ]
+                      $state.actions = {
+                        addTodo: () => {
+                          if ($state.input.value) {
+                            $state.todos.push({ value: $state.input.value.value, completed: false })
+                            $state.input.value.value = ""
+                          }
+                        },
+                        toggleTodo: (todo) => () => todo.completed = !todo.completed,
+                        removeTodo: (todo) => () => $state.todos = $state.todos.filter(t => t !== todo)
+                      }
+                      $effect(() => console.log("todos changed", $state.todos))
+                    </script>
+                    <input :ref="input" type="text" placeholder="Add a todo" />
+                    <button class="add" @click="actions.addTodo">Add</button>
+                    <ul>
+                      <template each:todo="todos">
+                        <li>
+                          <input type="checkbox" @click="actions.toggleTodo(todo)" .checked="todo.completed" />
+                          <span :text="todo.value" :style="`text-decoration:${todo.completed ? 'line-through' : 'none'};`"></span>
+                          <button class="remove" @click="actions.removeTodo(todo)">🗑️</button>
+                        </li>
+                      </template>
+                    </ul>
+                    <style>
+                        ul {
+                            list-style: none;
+                            padding: 0;
+                        }
+                        .remove {
+                            background: transparent;
+                            border: none;
+                            cursor: pointer;
+                            font-size: .7rem;
+                            color: var(--blackberry-accent);
+                        }
+                        .add {
+                            background: var(--blackberry-accent);
+                            color: var(--blackberry-dark);
+                            padding: 4px 8px;
+                            border: 2px solid var(--blackberry-accent);
+                            font-family: "VT323", monospace;
+                            font-size: 1rem;
+                            transition: all 90ms;
+                        }
+                        input {
+                            padding: 4px 8px;
+                            border: 2px solid var(--blackberry-accent);
+                            font-family: "VT323", monospace;
+                            font-size: 1rem;
+                            color: var(--blackberry-dark);
+                            transition: all 90ms;
+
+                            &::placeholder {
+                                color: var(--blackberry-light);
+                            }
+
+                            &:focus {
+                                outline: none;
+                            }
+                        }
+                    </style>
                 </template>
-            '></code-block>
 
-            <h4 class="title">Property Directive</h4>
-            <p class="text">
-                The <inline-code>.</inline-code> directive binds the value of the expression to the property.
-                This is useful for passing values other than strings to components or elements.
-            </p>
-            <code-block language="html" content='
-                <template blackberry="parent-component">
-                    <child-component .hello="() => console.log(`Hello from parent!`)"></child-component>
-                </template>
+                <tab-bar tabs='["Todos", "Code"]'>
+                    <code-block slot="Code" language="html" content='
+                        <template blackberry="todo-component">
+                            <script>
+                              $state.input = { value: null }
+                              $state.todos = [
+                                { value: "learn blackberry", completed: true },
+                                { value: "download blackberry", completed: false },
+                                { value: "build something cool", completed: false },
+                              ]
+                              $state.actions = {
+                                addTodo: () => {
+                                  if ($state.input.value) {
+                                    $state.todos.push({ value: $state.input.value.value, completed: false })
+                                    $state.input.value.value = ""
+                                  }
+                                },
+                                toggleTodo: (todo) => () => todo.completed = !todo.completed,
+                                removeTodo: (todo) => () => $state.todos = $state.todos.filter(t => t !== todo)
+                              }
+                              $effect(() => console.log("todos changed", $state.todos))
+                            </script>
+                            <input :ref="input" type="text" placeholder="Add a todo" />
+                            <button class="add" @click="actions.addTodo">Add</button>
+                            <ul>
+                              <template each:todo="todos">
+                                <li>
+                                  <input type="checkbox" @click="actions.toggleTodo(todo)" .checked="todo.completed" />
+                                  <span :text="todo.value" :style="`text-decoration:${todo.completed ? `line-through` : `none`};`"></span>
+                                  <button class="remove" @click="actions.removeTodo(todo)">🗑️</button>
+                                </li>
+                              </template>
+                            </ul>
+                            <style>
+                                ul {
+                                    list-style: none;
+                                    padding: 0;
+                                }
+                                .remove {
+                                    background: transparent;
+                                    border: none;
+                                    cursor: pointer;
+                                    font-size: .7rem;
+                                    color: var(--blackberry-accent);
+                                }
+                                .add {
+                                    background: var(--blackberry-accent);
+                                    color: var(--blackberry-dark);
+                                    padding: 4px 8px;
+                                    border: 2px solid var(--blackberry-accent);
+                                    font-family: "VT323", monospace;
+                                    font-size: 1rem;
+                                    transition: all 90ms;
+                                }
+                                input {
+                                    padding: 4px 8px;
+                                    border: 2px solid var(--blackberry-accent);
+                                    font-family: "VT323", monospace;
+                                    font-size: 1rem;
+                                    color: var(--blackberry-dark);
+                                    transition: all 90ms;
 
-                <template blackberry="child-component">
-                    <button @click="$element.hello">Click me!</button>
-                </template>
-            '></code-block>
+                                    &::placeholder {
+                                        color: var(--blackberry-light);
+                                    }
 
-            <h4 class="title">Slots</h4>
-            <p class="text">
-                Slots are used to pass content into a component. They are defined in the component's template using the <inline-code>slot</inline-code> tag.
-                The content passed into the slot is rendered in place of the slot tag.
-            </p>
-            <code-block language="html" content='
-                <template blackberry="slot-example">
-                    <div>
-                        <slot></slot>
-                    </div>
-                </template>
-
-                <slot-example>
-                    <h1>Hello, world!</h1>
-                </slot-example>
-            '></code-block>
-
-            <h3 class="title">Styling</h3>
-            <p class="text">
-                Styles can be defined in the <inline-code>style</inline-code> tag of a component.
-                Styles are scoped to the component and do not leak out.
-            </p>
-            <p class="text">
-                Because Blackberry components use the shadow-dom, they do not have access to global stylesheets by default.
-                If you want your component to inherit styles from the outside document,
-                you can set the <inline-code>global-styles</inline-code> attribute on a component template.
-            </p>
+                                    &:focus {
+                                        outline: none;
+                                    }
+                                }
+                            </style>
+                        </template>
+                    '></code-block>
+                    <todo-component slot="Todos"></todo-component>
+                </tab-bar>
+            </section>
         </div>
     </body>
 </html>

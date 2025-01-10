@@ -1,5 +1,5 @@
 import { effect, effectScope, reactive } from "@vue/reactivity"
-import { render } from "preact"
+import { render, h, Fragment } from "preact"
 export { h, Fragment } from "preact"
 
 Symbol.metadata ??= Symbol('metadata');
@@ -62,6 +62,8 @@ export class BlackberryElement extends HTMLElement {
     }
 
     this.rootEffectScope = effectScope()
+    this.rootNode = document.createElement('shadow-root')
+    this.shadowRoot.appendChild(this.rootNode)
   }
 
   connectedCallback() {
@@ -69,7 +71,7 @@ export class BlackberryElement extends HTMLElement {
     this.rootEffectScope.run(() => {
       this.onMount?.()
       effect(() => {
-        render(this.render.call(self), this.shadowRoot, { host: this });
+        render(h("shadow-root", {}, this.render.call(self)), this.rootNode, { host: this });
       })
       this.onMounted?.();
     })

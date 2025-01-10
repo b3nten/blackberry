@@ -55,15 +55,17 @@ const compile_node = (element, scope) => {
         attributes.dangerouslySetInnerHTML = { __html: exp.call(scope) }
       } else if (attr.nodeName === ":if") {
         if_expression = exp
+      } else if (attr.nodeName === ":ref") {
+        attributes.ref = exp.call(scope)
       } else {
         attributes["attr:" + attr.nodeName.slice(1)] = exp.call(scope)
       }
     } else if (key[0] === "@") {
-      attributes[`on${key[1].toUpperCase()}${key.slice(2)}`] = (e) => resolve_scoped_path(value, scope)(e)
+      let exp = new expression(value)
+      attributes[`on${key[1].toUpperCase()}${key.slice(2)}`] = (e) => exp.call(scope)(e)
     } else if (key[0] === ".") {
       let exp = new expression(value)
-      let value = exp.call(scope)
-      attributes["prop:" + key.slice(1)] = value
+      attributes["prop:" + key.slice(1)] = exp.call(scope)
     }else {
       attributes[key] = value
     }
@@ -73,7 +75,7 @@ const compile_node = (element, scope) => {
     children.push(child.tagName?.toLowerCase() === "template" ? compile_template(child, scope) : compile_node(child, scope))
   }
 
-  return if_expression && !if_expression.call(scope) ? [] : h(tag, attributes, children)
+  return if_expression && !if_expression.call(scope) ? null : h(tag, attributes, ...children)
 }
 
 const compile_template = (element, scope) => {
@@ -95,12 +97,21 @@ const compile_template = (element, scope) => {
   if (each_key) {
     let values = each_expression.call(scope);
     for (let i = 0; i < values.length; i++) {
-      let new_scope = { ...scope, [each_key]: values[i] };
-      children.push(compile_node(nodes, new_scope ));
+      let proxy = new Proxy({}, {
+        get: (_, key) => key === each_key ? values[i] : scope[key],
+        has: (_, key) => key === each_key || key in scope,
+        set: (_, key, value) => {
+          scope[key] = value
+          return true
+        }
+      })
+      children.push(compile_node(nodes, proxy));
     }
+  } else {
+    children.push(compile_node(nodes, scope));
   }
 
-  return if_expression && !if_expression.call(scope) ? [] : children
+  return if_expression && !if_expression.call(scope) ? null : h(Fragment, {}, ...children)
 }
 
 function construct_from_element(element) {
@@ -164,7 +175,8 @@ function construct_from_element(element) {
     }
 
     render() {
-      return compile_node(Array.from(markup.children), this.__internal_data)
+      const result = compile_node(Array.from(markup.children), this.__internal_data).flat()
+      return result
     }
 
     onUnmount() {

@@ -25,7 +25,7 @@ const render = (vnode, dom, ctx) => {
   return result;
 }
 
-const _render = (newVNode, dom, oldVNode = dom._vnode || (dom._vnode = {})) => {
+const _render = (newVNode, dom, oldVNode) => {
   return diff(h(Fragment, {}, [newVNode]), dom, oldVNode);
 };
 
@@ -82,7 +82,9 @@ const diff = (newVNode, dom, oldVNode, currentChildIndex) => {
       // If newVNode.type is truthy (=not an empty string) we have a DOM node
       if (newVNode._type) {
         const { key, ref, ...newProps } = newVNode._props;
-        if (ref) ref.value = ref.current = newDom;
+        if (ref) {
+          ref.value = ref.current = newDom;
+        }
 
         for (let name in newProps) {
           const value = newProps[name];
