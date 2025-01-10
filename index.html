@@ -143,10 +143,23 @@
             }
 
             .text {
-                margin: 1rem 0;
+                margin: 0.5 0 1rem 0;
                 font-family: sans-serif;
                 font-size: 1.125rem;
                 line-height: 140%;
+            }
+
+            a {
+                color: var(--blackberry-accent);
+                text-decoration: none;
+                font-weight: bold;
+                transition: all 90ms;
+                &:hover {
+                    color: var(--blackberry-text);
+                }
+                :visited {
+                    color: var(--blackberry-accent);
+                }
             }
 
             .header-logo-container {
@@ -903,6 +916,18 @@
                 <tab-bar tabs='["Todos", "Code"]'>
                     <code-block slot="Code" language="html" content='
                         <template blackberry="todo-component">
+                            <input :ref="input" type="text" placeholder="Add a todo" />
+                            <button class="add" @click="actions.addTodo">Add</button>
+                            <ul>
+                              <template each:todo="todos">
+                                <li>
+                                  <input type="checkbox" @click="actions.toggleTodo(todo)" .checked="todo.completed" />
+                                  <span :text="todo.value" :style="`text-decoration:${todo.completed ? `line-through` : `none`};`"></span>
+                                  <button class="remove" @click="actions.removeTodo(todo)">🗑️</button>
+                                </li>
+                              </template>
+                            </ul>
+
                             <script>
                               $state.input = { value: null }
                               $state.todos = [
@@ -922,17 +947,7 @@
                               }
                               $effect(() => console.log("todos changed", $state.todos))
                             </script>
-                            <input :ref="input" type="text" placeholder="Add a todo" />
-                            <button class="add" @click="actions.addTodo">Add</button>
-                            <ul>
-                              <template each:todo="todos">
-                                <li>
-                                  <input type="checkbox" @click="actions.toggleTodo(todo)" .checked="todo.completed" />
-                                  <span :text="todo.value" :style="`text-decoration:${todo.completed ? `line-through` : `none`};`"></span>
-                                  <button class="remove" @click="actions.removeTodo(todo)">🗑️</button>
-                                </li>
-                              </template>
-                            </ul>
+
                             <style>
                                 ul {
                                     list-style: none;
