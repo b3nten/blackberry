@@ -274,7 +274,7 @@
 
         </div>
     </template>
-    <body>
+    <body blackberry-cloak>
         <!-- ##Counter Component -->
         <template blackberry="counter-component" attributes="initial">
             <button
@@ -981,11 +981,9 @@
                                     font-size: 1rem;
                                     color: var(--blackberry-dark);
                                     transition: all 90ms;
-
                                     &::placeholder {
                                         color: var(--blackberry-light);
                                     }
-
                                     &:focus {
                                         outline: none;
                                     }
