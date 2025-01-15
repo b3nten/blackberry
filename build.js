@@ -2,19 +2,17 @@ import * as dts from "dts-bundle-generator"
 import * as esbuild from "esbuild";
 import * as fs from "node:fs/promises";
 
-const args = process.argv.slice(2)
-
 const VERSION = "0.0.1"
 
-const name = (n) => `${n}@${VERSION}`
+let name = (n) => `${n}@${VERSION}`
 
-esbuild.build({
+let config = (c) => ({
   outdir: "dist",
   entryPoints: [
-    {in: "src/mod.js", out: name("blackberry")},
+    {in: "src/mod.js", out: name(c.name)},
     {in: "src/logo.ts", out: name("logo")},
   ],
-  bundle: true,
+  bundle: c.bundle,
   minify: true,
   format: "esm",
   platform: "browser",
@@ -23,5 +21,5 @@ esbuild.build({
   lineLimit: 120,
 })
 
-let types = await fs.readFile("include/ivysaur@1.0.0.d.ts", "utf-8")
-await fs.writeFile("dist/blackberry.d.ts", types + "\n" + 'declare let mod: () => void; export default mod;')
+esbuild.build(config({name: "blackberry", bundle: true}))
+esbuild.build(config({name: "blackberry.min", bundle: false}))

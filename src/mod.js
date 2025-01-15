@@ -1,7 +1,7 @@
-import { h, Fragment, reactive, Ivysaur, effect } from "../include/ivysaur@1.0.0.js";
+import { h, Fragment, reactive, Ivysaur, effect } from "ivysaur";
 
 export { init as default }
-export * from "../include/ivysaur@1.0.0.js";
+export * from "ivysaur";
 
 let request_idle_callback = window.requestIdleCallback || ((fn) => setTimeout(fn, 0));
 

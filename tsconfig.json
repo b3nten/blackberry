@@ -2,6 +2,8 @@
   "compilerOptions": {
     "declaration": true,
     "emitDeclarationOnly": true,
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "allowJs": true,
     "checkJs": false,
     "lib": ["ES2022", "DOM"],
