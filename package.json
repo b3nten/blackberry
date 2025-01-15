@@ -1,14 +1,22 @@
 {
+  "name": "blackberry.js",
+  "version": "1.0.0",
+  "description": "A simple reactive html-based component library.",
   "type": "module",
   "scripts": {
-    "dev": "./watch.sh -c 'node build src && node server'"
+    "dev": "./watch.sh -c 'node build src && node server'",
+    "build": "node build src types"
   },
   "dependencies": {
     "@types/node": "^22.10.5",
-    "@vue/reactivity": "^3.5.13",
     "dts-bundle-generator": "^9.5.1",
     "esbuild": "^0.24.2",
-    "preact": "^10.25.4",
     "typescript": "^5.7.2"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
   }
 }

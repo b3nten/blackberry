@@ -3,8 +3,10 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "allowJs": true,
+    "checkJs": false,
     "lib": ["ES2022", "DOM"],
     "outDir": "dist",
-
-  }
+    "declarationMap": true
+  },
+  "include": ["src/*"]
 }

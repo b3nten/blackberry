@@ -1,6 +1,9 @@
-import { reactive, effect } from "@vue/reactivity";
-import { h, Fragment } from "preact";
-import { BlackberryElement } from "./element.js";
+import { h, Fragment, reactive, Ivysaur, effect } from "../include/ivysaur@1.0.0.js";
+
+export { init as default }
+export * from "../include/ivysaur@1.0.0.js";
+
+let request_idle_callback = window.requestIdleCallback || ((fn) => setTimeout(fn, 0));
 
 class expression {
   static Cache = new Map();
@@ -23,16 +26,7 @@ class expression {
   }
 }
 
-function resolve_scoped_path(key, scope) {
-  let segments = key.split(".")
-  let value = scope
-  for (let segment of segments) {
-    value = value[segment]
-  }
-  return value
-}
-
-const compile_node = (element, scope) => {
+let compile_node = (element, scope) => {
   if (Array.isArray(element)) {
     return h(Fragment, {}, element.flatMap((el) => compile_node(el, scope)))
   }
@@ -78,7 +72,7 @@ const compile_node = (element, scope) => {
   return if_expression && !if_expression.call(scope) ? null : h(tag, attributes, ...children)
 }
 
-const compile_template = (element, scope) => {
+let compile_template = (element, scope) => {
   let each_key, each_expression, if_expression;
 
   for (let attr of element.attributes) {
@@ -114,7 +108,7 @@ const compile_template = (element, scope) => {
   return if_expression && !if_expression.call(scope) ? null : h(Fragment, {}, ...children)
 }
 
-function construct_from_element(element) {
+let construct_from_element = (element) => {
   if (element.tagName !== "TEMPLATE" || !(typeof element.getAttribute("blackberry") === "string")) {
     return;
   }
@@ -150,7 +144,7 @@ function construct_from_element(element) {
     script,
   );
 
-  customElements.define(tagname, class extends BlackberryElement {
+  customElements.define(tagname, class extends Ivysaur {
     static get observedAttributes() { return attrs; }
     static styles = style;
 
@@ -158,14 +152,14 @@ function construct_from_element(element) {
       const data = reactive({});
 
       data.$element = this;
-      data.$attributes = this.attrs;
+      data.$attributes = this.observedAttributes;
 
       const cleanup = (...fns) => void this.cleanup_fns.push(...fns);
 
       setup(
         this,
         data,
-        this.attrs,
+        this.observedAttributes,
         cleanup,
         reactive,
         effect
@@ -187,11 +181,14 @@ function construct_from_element(element) {
   })
 }
 
-export default function init_blackberry() {
-  requestIdleCallback(() => {
+/**
+* @type { () => void }
+*/
+let init = () => {
+  request_idle_callback(() => {
     document.querySelectorAll("template").forEach((element) => construct_from_element(element));
     document.body.removeAttribute("blackberry-cloak");
-  })
+  });
 
   let mutationObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
@@ -200,5 +197,6 @@ export default function init_blackberry() {
       });
     });
   });
+
   mutationObserver.observe(document.body, { childList: true, subtree: true });
 }
