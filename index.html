@@ -5,25 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="Blackberry.js - a zero-build framework for the artisanal web">
 
-        <style>
-          /* Hide elements that are not yet defined */
-          :not(:defined) {
-            visibility: hidden;
-          }
-
-          /* Fade in elements when they become defined */
-          :not(:defined) {
-            opacity: 0;
-            transition: opacity 0.25s;
-          }
-
-          :defined {
-            opacity: 1;
-          }
-        </style>
-
-
-        <style>body {transition: opacity .25s .3s;} [blackberry-cloak] {opacity: 0;}</style>
+        <style>body {transition: opacity .125s} [blackberry-cloak] {opacity: 0;}</style>
 
         <!--	Deps	-->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual defer></script>
@@ -35,7 +17,7 @@
         <title>Blackberry.js - for the artisinal web</title>
 
         <!--	Init	-->
-        <script type="module">
+        <script type="module" defer>
             import Blackberry from "/dist/blackberry@0.0.1.js";
             Blackberry();
         </script>
@@ -248,7 +230,7 @@
             }
         </style>
     </head>
-    <body>
+    <body blackberry-cloak>
         <!-- ##Counter Component -->
         <template blackberry="counter-component" attributes="initial">
             <button
