@@ -185,10 +185,14 @@ let construct_from_element = (element) => {
 * @type { () => void }
 */
 let init = () => {
-  request_idle_callback(() => {
-    document.querySelectorAll("template").forEach((element) => construct_from_element(element));
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+    return;
+  } else {
+    document.querySelectorAll("template[blackberry]").forEach(construct_from_element);
     document.body.removeAttribute("blackberry-cloak");
-  });
+  }
 
   let mutationObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {

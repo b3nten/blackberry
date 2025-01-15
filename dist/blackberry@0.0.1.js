@@ -52,7 +52,7 @@ subs;e;e=e.prevSub)e.sub.notify()&&e.sub.dep.notify()}finally{St()}}};function F
 dep.computed;if(e&&!t.dep.subs){e.flags|=20;for(let i=e.deps;i;i=i.nextDep)Ft(i)}let r=t.dep.subs;r!==t&&(t.prevSub=r,r&&
 (r.nextSub=t)),t.dep.subsHead===void 0&&(t.dep.subsHead=t),t.dep.subs=t}}var ht=new WeakMap,O=Symbol("Object iterate"),pt=Symbol(
 "Map keys iterate"),U=Symbol("Array iterate");function b(t,e,r){if(y&&h){let i=ht.get(t);i||ht.set(t,i=new Map);let s=i.
-get(r);s||(i.set(r,s=new ve),s.map=i,s.key=r),s.track({target:t,type:e,key:r})}}function M(t,e,r,i,s,a){let n=ht.get(t);
+get(r);s||(i.set(r,s=new ve),s.map=i,s.key=r),s.track({target:t,type:e,key:r})}}function R(t,e,r,i,s,a){let n=ht.get(t);
 if(!n){et++;return}let o=c=>{c&&c.trigger({target:t,type:e,key:r,newValue:i,oldValue:s,oldTarget:a})};if(mt(),e==="clear")
 n.forEach(o);else{let c=j(t),u=c&&bt(r);if(c&&r==="length"){let v=Number(i);n.forEach((f,l)=>{(l==="length"||l===U||!J(l)&&
 l>=v)&&o(f)})}else switch((r!==void 0||n.has(void 0))&&o(n.get(r)),u&&o(n.get(U)),e){case"add":c?u&&o(n.get("length")):(o(
@@ -84,8 +84,8 @@ t)===Object.getPrototypeOf(r)?t:void 0;let a=j(t);if(!i){let o;if(a&&(o=_e[e]))r
 let n=Reflect.get(t,e,N(t)?t:r);return(J(e)?Nt.has(e):ge(e))||(i||b(t,"get",e),s)?n:N(n)?a&&bt(e)?n:n.value:rt(n)?i?Qt(n):
 T(n):n}},me=class extends Ut{constructor(t=!1){super(!1,t)}set(t,e,r,i){let s=t[e];if(!this._isShallow){let o=q(s);if(!I(
 r)&&!q(r)&&(s=p(s),r=p(r)),!j(t)&&N(s)&&!N(r))return o?!1:(s.value=r,!0)}let a=j(t)&&bt(e)?Number(e)<t.length:ft(t,e),n=Reflect.
-set(t,e,r,N(t)?t:i);return t===p(i)&&(a?Y(r,s)&&M(t,"set",e,r,s):M(t,"add",e,r)),n}deleteProperty(t,e){let r=ft(t,e),i=t[e],
-s=Reflect.deleteProperty(t,e);return s&&r&&M(t,"delete",e,void 0,i),s}has(t,e){let r=Reflect.has(t,e);return(!J(e)||!Nt.
+set(t,e,r,N(t)?t:i);return t===p(i)&&(a?Y(r,s)&&R(t,"set",e,r,s):R(t,"add",e,r)),n}deleteProperty(t,e){let r=ft(t,e),i=t[e],
+s=Reflect.deleteProperty(t,e);return s&&r&&R(t,"delete",e,void 0,i),s}has(t,e){let r=Reflect.has(t,e);return(!J(e)||!Nt.
 has(e))&&b(t,"has",e),r}ownKeys(t){return b(t,"iterate",j(t)?"length":O),Reflect.ownKeys(t)}},Se=class extends Ut{constructor(t=!1){
 super(!0,t)}set(t,e){return D(`Set operation on key "${String(e)}" failed: target is readonly.`,t),!0}deleteProperty(t,e){
 return D(`Delete operation on key "${String(e)}" failed: target is readonly.`,t),!0}},ye=new me,xe=new Se,vt=t=>t,H=t=>Reflect.
@@ -99,24 +99,24 @@ get size(){let s=this.__v_raw;return!t&&b(p(s),"iterate",O),Reflect.get(s,"size"
 s);return t||(Y(s,o)&&b(n,"has",s),b(n,"has",o)),s===o?a.has(s):a.has(s)||a.has(o)},forEach(s,a){let n=this,o=n.__v_raw,
 c=p(o),u=e?vt:t?_t:m;return!t&&b(c,"iterate",O),o.forEach((v,f)=>s.call(a,u(v),u(f),n))}};return tt(r,t?{add:k("add"),set:k(
 "set"),delete:k("delete"),clear:k("clear")}:{add(s){!e&&!I(s)&&!q(s)&&(s=p(s));let a=p(this);return H(a).has.call(a,s)||
-(a.add(s),M(a,"add",s,s)),this},set(s,a){!e&&!I(a)&&!q(a)&&(a=p(a));let n=p(this),{has:o,get:c}=H(n),u=o.call(n,s);u?Dt(
-n,o,s):(s=p(s),u=o.call(n,s));let v=c.call(n,s);return n.set(s,a),u?Y(a,v)&&M(n,"set",s,a,v):M(n,"add",s,a),this},delete(s){
+(a.add(s),R(a,"add",s,s)),this},set(s,a){!e&&!I(a)&&!q(a)&&(a=p(a));let n=p(this),{has:o,get:c}=H(n),u=o.call(n,s);u?Dt(
+n,o,s):(s=p(s),u=o.call(n,s));let v=c.call(n,s);return n.set(s,a),u?Y(a,v)&&R(n,"set",s,a,v):R(n,"add",s,a),this},delete(s){
 let a=p(this),{has:n,get:o}=H(a),c=n.call(a,s);c?Dt(a,n,s):(s=p(s),c=n.call(a,s));let u=o?o.call(a,s):void 0,v=a.delete(
-s);return c&&M(a,"delete",s,void 0,u),v},clear(){let s=p(this),a=s.size!==0,n=B(s)?new Map(s):new Set(s),o=s.clear();return a&&
-M(s,"clear",void 0,void 0,n),o}}),["keys","values","entries",Symbol.iterator].forEach(s=>{r[s]=Ee(s,t,e)}),r}function qt(t,e){
+s);return c&&R(a,"delete",s,void 0,u),v},clear(){let s=p(this),a=s.size!==0,n=B(s)?new Map(s):new Set(s),o=s.clear();return a&&
+R(s,"clear",void 0,void 0,n),o}}),["keys","values","entries",Symbol.iterator].forEach(s=>{r[s]=Ee(s,t,e)}),r}function qt(t,e){
 let r=Ae(t,e);return(i,s,a)=>s==="__v_isReactive"?!t:s==="__v_isReadonly"?t:s==="__v_raw"?i:Reflect.get(ft(r,s)&&s in i?
-r:i,s,a)}var Re={get:qt(!1,!1)},Me={get:qt(!0,!1)};function Dt(t,e,r){let i=p(r);if(i!==r&&e.call(t,i)){let s=jt(t);D(`R\
+r:i,s,a)}var Me={get:qt(!1,!1)},Re={get:qt(!0,!1)};function Dt(t,e,r){let i=p(r);if(i!==r&&e.call(t,i)){let s=jt(t);D(`R\
 eactive ${s} contains both the raw and reactive versions of the same object${s==="Map"?" as keys":""}, which can lead to\
  inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive ver\
 sion if possible.`)}}var Gt=new WeakMap,Te=new WeakMap,Jt=new WeakMap,we=new WeakMap;function Oe(t){switch(t){case"Objec\
 t":case"Array":return 1;case"Map":case"Set":case"WeakMap":case"WeakSet":return 2;default:return 0}}function De(t){return t.
-__v_skip||!Object.isExtensible(t)?0:Oe(jt(t))}function T(t){return q(t)?t:Xt(t,!1,ye,Re,Gt)}function Qt(t){return Xt(t,!0,
-xe,Me,Jt)}function Xt(t,e,r,i,s){if(!rt(t))return D(`value cannot be made ${e?"readonly":"reactive"}: ${String(t)}`),t;if(t.
+__v_skip||!Object.isExtensible(t)?0:Oe(jt(t))}function T(t){return q(t)?t:Xt(t,!1,ye,Me,Gt)}function Qt(t){return Xt(t,!0,
+xe,Re,Jt)}function Xt(t,e,r,i,s){if(!rt(t))return D(`value cannot be made ${e?"readonly":"reactive"}: ${String(t)}`),t;if(t.
 __v_raw&&!(e&&t.__v_isReactive))return t;let a=s.get(t);if(a)return a;let n=De(t);if(n===0)return t;let o=new Proxy(t,n===
 2?i:r);return s.set(t,o),o}function q(t){return!!(t&&t.__v_isReadonly)}function I(t){return!!(t&&t.__v_isShallow)}function Ie(t){
 return t?!!t.__v_raw:!1}function p(t){let e=t&&t.__v_raw;return e?p(e):t}var m=t=>rt(t)?T(t):t,_t=t=>rt(t)?Qt(t):t;function N(t){
 return t?t.__v_isRef===!0:!1}var Zt=1,G=3,it={},At=[],Le="http://www.w3.org/2000/svg",It=function(t){this._vevents[t.type](
-t)},R=t=>t==null?t:t.key,Ht=(t,e,r,i,s)=>{e==="key"||(e[0]==="o"&&e[1]==="n"?(e=e.toLowerCase().slice(2),t._vevents??={},
+t)},M=t=>t==null?t:t.key,Ht=(t,e,r,i,s)=>{e==="key"||(e[0]==="o"&&e[1]==="n"?(e=e.toLowerCase().slice(2),t._vevents??={},
 !i&&r&&t.removeEventListener(e,It),!r&&i&&t.addEventListener(e,It),r!==i&&(t._vevents[e]=i?a=>i.call(Pe.host??t,a):null)):
 e==="ref"?typeof i=="function"?r||(t._vcleanup=i(t)):i.current=i.value=t:e.startsWith("attr:")?t.setAttribute(e.slice(5),
 i):e.startsWith("prop:")?t[e.slice(5)]=i:!s&&e!=="list"&&e!=="form"&&e in t?t[e]=i??"":i==null||i===!1?t.removeAttribute(
@@ -127,17 +127,17 @@ P(t.children[a]),e));return t.node=i},w=(t,e,r,i,s)=>{if(r!==i)if(r!=null&&r.typ
 i.tag);else if(r==null||r.tag!==i.tag)e=t.insertBefore(dt(i=P(i),s),e),r!=null&&t.removeChild(r.node);else{var a,n,o,c,u=r.
 props,v=i.props,f=r.children,l=i.children,d=0,_=0,x=f.length-1,A=l.length-1;s=s||i.tag==="svg";for(var g in{...u,...v})(g===
 "value"||g==="selected"||g==="checked"?e[g]:u[g])!==v[g]&&Ht(e,g,u[g],v[g],s);if(i.props?.dangerouslySetInnerHTML)return e.
-innerHTML=i.props.dangerouslySetInnerHTML.__html,i.node=e;for(;_<=A&&d<=x&&!((o=R(f[d]))==null||o!==R(l[_]));)w(e,f[d].node,
-f[d++],l[_]=P(l[_++]),s);for(;_<=A&&d<=x&&!((o=R(f[x]))==null||o!==R(l[A]));)w(e,f[x].node,f[x--],l[A]=P(l[A--]),s);if(d>
+innerHTML=i.props.dangerouslySetInnerHTML.__html,i.node=e;for(;_<=A&&d<=x&&!((o=M(f[d]))==null||o!==M(l[_]));)w(e,f[d].node,
+f[d++],l[_]=P(l[_++]),s);for(;_<=A&&d<=x&&!((o=M(f[x]))==null||o!==M(l[A]));)w(e,f[x].node,f[x--],l[A]=P(l[A--]),s);if(d>
 x)for(;_<=A;)e.insertBefore(dt(l[_]=P(l[_++]),s),(n=f[d])&&n.node);else if(_>A)for(;d<=x;)e.removeChild(f[d++].node);else{
-for(var X={},Z={},g=d;g<=x;g++)(o=f[g].key)!=null&&(X[o]=f[g]);for(;_<=A;){if(o=R(n=f[d]),c=R(l[_]=P(l[_])),Z[o]||c!=null&&
-c===R(f[d+1])){o==null&&e.removeChild(n.node),d++;continue}c==null||r.type===Zt?(o==null&&(w(e,n&&n.node,n,l[_],s),_++),
+for(var X={},Z={},g=d;g<=x;g++)(o=f[g].key)!=null&&(X[o]=f[g]);for(;_<=A;){if(o=M(n=f[d]),c=M(l[_]=P(l[_])),Z[o]||c!=null&&
+c===M(f[d+1])){o==null&&e.removeChild(n.node),d++;continue}c==null||r.type===Zt?(o==null&&(w(e,n&&n.node,n,l[_],s),_++),
 d++):(o===c?(w(e,n.node,n,l[_],s),Z[c]=!0,d++):(a=X[c])!=null?(w(e,e.insertBefore(a.node,n&&n.node),a,l[_],s),Z[c]=!0):w(
-e,n&&n.node,null,l[_],s),_++)}for(;d<=x;)R(n=f[d++])==null&&e.removeChild(n.node);for(var g in X)Z[g]==null&&e.removeChild(
-X[g].node)}}return i.node=e},P=t=>t!==!0&&t!==!1&&t?t:Mt(""),kt=t=>t.nodeType===G?Mt(t.nodeValue,t):Rt(t.nodeName.toLowerCase(),
-it,At.map.call(t.childNodes,kt),Zt,t),Rt=(t,e,r,i,s)=>({tag:t,props:e,key:e.key,children:r,type:i,node:s}),Ce=(t,e,r=At)=>Rt(
-t,e,Array.isArray(r)?r:[r]),Mt=(t,e)=>Rt(t,it,At,G,e),nt=(t,e)=>e.flat(),$=(t,e,...r)=>typeof t=="function"?t(e,r):Ce(t,
-e||{},r.flatMap(i=>typeof i=="string"||typeof i=="number"?Mt(i):i)),Pe=it,gt=(t,e,r={})=>(gt.ctx=r,(e=w(e.parentNode,e,e.
+e,n&&n.node,null,l[_],s),_++)}for(;d<=x;)M(n=f[d++])==null&&e.removeChild(n.node);for(var g in X)Z[g]==null&&e.removeChild(
+X[g].node)}}return i.node=e},P=t=>t!==!0&&t!==!1&&t?t:Rt(""),kt=t=>t.nodeType===G?Rt(t.nodeValue,t):Mt(t.nodeName.toLowerCase(),
+it,At.map.call(t.childNodes,kt),Zt,t),Mt=(t,e,r,i,s)=>({tag:t,props:e,key:e.key,children:r,type:i,node:s}),Ce=(t,e,r=At)=>Mt(
+t,e,Array.isArray(r)?r:[r]),Rt=(t,e)=>Mt(t,it,At,G,e),nt=(t,e)=>e.flat(),$=(t,e,...r)=>typeof t=="function"?t(e,r):Ce(t,
+e||{},r.flatMap(i=>typeof i=="string"||typeof i=="number"?Rt(i):i)),Pe=it,gt=(t,e,r={})=>(gt.ctx=r,(e=w(e.parentNode,e,e.
 vdom||kt(e),t)).vdom=t,gt.ctx=it,e);Symbol.metadata??=Symbol("metadata");var K=new Map,ut=null,je=()=>(ut===null&&(ut=Array.
 from(document.styleSheets).map(t=>{let e=new CSSStyleSheet,r=Array.from(t.cssRules).map(i=>i.cssText).join(" ");return e.
 replaceSync(r),e})),ut),V=!0,Ge=t=>V=t,Lt=!1,Kt=class extends HTMLElement{static styles="";static use_global_styles=!1;static define_self(t){
@@ -164,7 +164,7 @@ nvalid decorator usage: @state only works on class accessors.")}}var $e=t=>t;fun
 name:s,metadata:a}){let n=t??s,o=e.converter??$e;if(K.has(a)||K.set(a,new Set),K.get(a).add(n),i==="accessor")return{get(){
 return o(this.observed_attributes[n])},set(c){this.observed_attributes[n]=c,this.setAttribute(n,String(c))},init(c){this.
 observed_attributes[n]=c}};if(i==="getter")return function(){let c=this.observed_attributes[n];return typeof c<"u"?o(c):
-r()};throw new Error("Invalid decorator usage: @attribute only works on class accessors and getters.")}}var We=window.requestIdleCallback||(t=>setTimeout(t,0)),L=class t{static Cache=new Map;constructor(e){t.Cache.has(e)&&(this.
+r()};throw new Error("Invalid decorator usage: @attribute only works on class accessors and getters.")}}var nr=window.requestIdleCallback||(t=>setTimeout(t,0)),L=class t{static Cache=new Map;constructor(e){t.Cache.has(e)&&(this.
 call=t.Cache.get(e));let r=()=>{try{let i=new Function(["scope"],`with (scope) { return ${e}; }`);return Object.defineProperty(
 i,"name",{value:`[expression]: ${e}`}),i}catch(i){return console.log(`Error while compiling expression: ${e}`,i),()=>""}};
 t.Cache.set(e,r()),this.call=t.Cache.get(e)}},Q=(t,e)=>{if(Array.isArray(t))return $(nt,{},t.flatMap(n=>Q(n,e)));if(t.nodeType!=
@@ -173,7 +173,7 @@ if(n.nodeName[0]===":"){let u=new L(n.nodeValue);n.nodeName===":text"?s.push(u.c
 {__html:u.call(e)}:n.nodeName===":if"?a=u:n.nodeName===":ref"?i.ref=u.call(e):i["attr:"+n.nodeName.slice(1)]=u.call(e)}else if(o[0]===
 "@"){let u=new L(c);i[`on${o[1].toUpperCase()}${o.slice(2)}`]=v=>u.call(e)(v)}else if(o[0]==="."){let u=new L(c);i["prop\
 :"+o.slice(1)]=u.call(e)}else i[o]=c}for(let n of Array.from((r=="template"?t.content:t).childNodes))s.push(n.tagName?.toLowerCase()===
-"template"?Be(n,e):Q(n,e));return a&&!a.call(e)?null:$(r,i,...s)},Be=(t,e)=>{let r,i,s;for(let o of t.attributes)o.nodeName.
+"template"?We(n,e):Q(n,e));return a&&!a.call(e)?null:$(r,i,...s)},We=(t,e)=>{let r,i,s;for(let o of t.attributes)o.nodeName.
 startsWith("each")&&(r=o.nodeName.split(":")[1].trim(),i=new L(o.nodeValue)),o.nodeName===":if"&&(s=new L(o.nodeValue));
 let a=[],n=Array.from(t.content.children);if(r){let o=i.call(e);for(let c=0;c<o.length;c++){let u=new Proxy({},{get:(v,f)=>f===
 r?o[c]:e[f],has:(v,f)=>f===r||f in e,set:(v,f,l)=>(e[f]=l,!0)});a.push(Q(n,u))}}else a.push(Q(n,e));return s&&!s.call(e)?
@@ -184,9 +184,10 @@ c.innerHTML,s.push(c)):c.tagName==="STYLE"&&(i+=c.innerText,s.push(c));s.forEach
 "$reactive","$effect",r);customElements.define(e,class extends Kt{static get observedAttributes(){return n}static styles=i;onMount(){
 let c=T({});c.$element=this,c.$attributes=this.observedAttributes;let u=(...v)=>void this.cleanup_fns.push(...v);o(this,
 c,this.observedAttributes,u,T,xt),this.__internal_data=c}render(){return Q(Array.from(a.children),this.__internal_data).
-flat()}onUnmount(){this.cleanup_fns.forEach(c=>c())}cleanup_fns=[]})},nr=()=>{We(()=>{document.querySelectorAll("templat\
-e").forEach(e=>Vt(e)),document.body.removeAttribute("blackberry-cloak")}),new MutationObserver(e=>{e.forEach(r=>{r.addedNodes.
-forEach(i=>{i.tagName==="TEMPLATE"&&Vt(i)})})}).observe(document.body,{childList:!0,subtree:!0})};export{nt as Fragment,V as IS_DEV,Kt as Ivysaur,Xe as attribute,Je as css,nr as default,xt as effect,oe as effectScope,$ as h,
+flat()}onUnmount(){this.cleanup_fns.forEach(c=>c())}cleanup_fns=[]})},Be=()=>{if(document.readyState==="loading"){document.
+addEventListener("DOMContentLoaded",Be);return}else document.querySelectorAll("template[blackberry]").forEach(Vt),document.
+body.removeAttribute("blackberry-cloak");new MutationObserver(e=>{e.forEach(r=>{r.addedNodes.forEach(i=>{i.tagName==="TE\
+MPLATE"&&Vt(i)})})}).observe(document.body,{childList:!0,subtree:!0})};export{nt as Fragment,V as IS_DEV,Kt as Ivysaur,Xe as attribute,Je as css,Be as default,xt as effect,oe as effectScope,$ as h,
 Kt as ivysaur,T as reactive,gt as render,Ge as setDev,Ge as set_dev,Qe as state};
 /*! Bundled license information:
 
