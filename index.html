@@ -8,23 +8,23 @@
         <style>body {transition: opacity .25s .3s;} [blackberry-cloak] {opacity: 0;}</style>
 
         <!--	Deps	-->
-        <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css" crossorigin="anonymous"">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual></script>
+        <script type="module" defer>
+          import "https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"
+          new Lenis({
+            autoRaf: true,
+            lerp: 0.15,
+          });
+        </script>
+        <link fetchpriority="low" rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css" crossorigin="anonymous"">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual defer></script>
 
         <!--	Meta	-->
         <title>Blackberry.js - for the artisinal web</title>
 
         <!--	Init	-->
-        <script type="module">
+        <script type="module" defer>
             import Blackberry from "/dist/blackberry@0.0.1.js";
-
             Blackberry();
-
-            const lenis = new Lenis({
-                autoRaf: true,
-                lerp: 0.15,
-            });
         </script>
 
         <!-- 	Styles	-->
