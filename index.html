@@ -165,7 +165,8 @@
                 justify-content: center;
                 align-items: center;
                 margin: 2rem 0;
-
+                aspect-ratio: 1/1;
+                width: 100%;
                 @media (max-width: 768px) {
                     /* hide 2 */
                     & img:nth-child(2) {
@@ -230,7 +231,7 @@
             }
         </style>
     </head>
-    <body blackberry-cloak>
+    <body>
         <!-- ##Counter Component -->
         <template blackberry="counter-component" attributes="initial">
             <button
@@ -527,11 +528,11 @@
             <!-- ##Header -->
             <h1 class="title">Blackberry.js</h1>
             <div class="header-logo-container">
-                <img height="512" width="512" class="header-logo" src="/assets/blackberry.png" />
-                <img height="512" width="512" class="header-logo" src="/assets/blackberry.png" />
-                <img height="512" width="512" class="header-logo" src="/assets/blackberry.png" />
-                <img height="512" width="512" class="header-logo" src="/assets/blackberry.png" />
-                <img height="512" width="512" class="header-logo" src="/assets/blackberry.png" />
+                <img class="header-logo" src="/assets/blackberry.png" />
+                <img class="header-logo" src="/assets/blackberry.png" />
+                <img class="header-logo" src="/assets/blackberry.png" />
+                <img class="header-logo" src="/assets/blackberry.png" />
+                <img class="header-logo" src="/assets/blackberry.png" />
             </div>
 
             <p class="text text-center">
