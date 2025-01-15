@@ -16,8 +16,8 @@
           });
         </script>
 
-        <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css" crossorigin="anonymous"">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual defer></script>
+        <link fetchpriority="low" rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css" crossorigin="anonymous"">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual></script>
 
         <!--	Meta	-->
         <title>Blackberry.js - for the artisinal web</title>
@@ -239,42 +239,6 @@
             }
         </style>
     </head>
-    <template>
-        <script type="module">
-          import { render, h, text, Fragment } from "/src/renderer.js"
-
-          let Inputs = h(Fragment, {},
-            h("input", { type: "email", placeholder: "Email" }),
-            h("input", { type: "password", placeholder: "Password" })
-          )
-
-          let Form = () => h("form", {},
-            h("p", {}, text("Email:")),
-            h(Inputs, {}),
-            h("button", { type: "submit" }, text("Submit"),
-          ))
-
-          const app = h("main", { foo: "bar" },
-            text("Hello, world!"),
-            h("button", { onclick: () => alert("WOO") }, text("Click me!")),
-            h(Fragment, {},
-              h("span", {}, text("Hello")),
-              h("span", {}, text("World")),
-            ),
-            h("div", {}, [
-              h("h1", {}, text("TITLE"))
-            ]),
-            h(Form, {}),
-          )
-
-          let root = document.getElementById("root")
-          render(app, root)
-          console.log(root._vnode)
-        </script>
-        <div id="root">
-
-        </div>
-    </template>
     <body>
         <!-- ##Counter Component -->
         <template blackberry="counter-component" attributes="initial">
@@ -572,11 +536,11 @@
             <!-- ##Header -->
             <h1 class="title">Blackberry.js</h1>
             <div class="header-logo-container">
-                <img class="header-logo" src="/assets/blackberry.png" />
-                <img class="header-logo" src="/assets/blackberry.png" />
-                <img class="header-logo" src="/assets/blackberry.png" />
-                <img class="header-logo" src="/assets/blackberry.png" />
-                <img class="header-logo" src="/assets/blackberry.png" />
+                <img height="512" width="512" class="header-logo" src="/assets/blackberry.png" />
+                <img height="512" width="512" class="header-logo" src="/assets/blackberry.png" />
+                <img height="512" width="512" class="header-logo" src="/assets/blackberry.png" />
+                <img height="512" width="512" class="header-logo" src="/assets/blackberry.png" />
+                <img height="512" width="512" class="header-logo" src="/assets/blackberry.png" />
             </div>
 
             <p class="text text-center">
