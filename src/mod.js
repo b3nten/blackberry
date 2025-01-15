@@ -185,7 +185,6 @@ let construct_from_element = (element) => {
 * @type { () => void }
 */
 let init = () => {
-
   let mutationObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
@@ -196,7 +195,7 @@ let init = () => {
 
   let start = () => {
     document.querySelectorAll("template[blackberry]").forEach(construct_from_element);
-    document.body.removeAttribute("blackberry-cloak");
+    // document.body.removeAttribute("blackberry-cloak");
     mutationObserver.observe(document.body, { childList: true, subtree: true });
   }
 
