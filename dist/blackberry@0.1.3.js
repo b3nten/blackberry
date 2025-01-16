@@ -1,4 +1,4 @@
-// node_modules/ivysaur/dist/ivysaur@0.2.0.js
+// node_modules/ivysaur/dist/ivysaur@0.2.1.js
 // @__NO_SIDE_EFFECTS__
 function makeMap(str) {
   const map = /* @__PURE__ */ Object.create(null);
@@ -2174,7 +2174,7 @@ export {
 };
 /*! Bundled license information:
 
-ivysaur/dist/ivysaur@0.2.0.js:
+ivysaur/dist/ivysaur@0.2.1.js:
   (*! Bundled license information:
   
   @vue/shared/dist/shared.esm-bundler.js:

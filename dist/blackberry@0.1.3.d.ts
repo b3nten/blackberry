@@ -3,7 +3,7 @@
 declare class VNode {
 }
 export declare type HFunction = (tag: string, props: Record<string, any> | VNode | string | number, ...children: any[]) => VNode;
-export declare type Fragment = (props: Record<string, any>, ...children: any[]) => VNode;
+export declare type FragmentFunction = (props: Record<string, any>, ...children: any[]) => VNode;
 export declare type RenderFunction = (vnode: VNode, container: Element) => void;
 export declare type CSSFunction = (strings: TemplateStringsArray, ...values: string[]) => string;
 /**
@@ -11,9 +11,9 @@ export declare type CSSFunction = (strings: TemplateStringsArray, ...values: str
 */
 export let h: HFunction;
 /**
-* @type { import("./types").Fragment }
+* @type { import("./types").FragmentFunction }
 */
-declare let Fragment$1: Fragment;
+export let Fragment: FragmentFunction;
 /**
 * @type { import("./types").RenderFunction }
 */
