@@ -18,6 +18,7 @@ declare let Fragment$1: Fragment;
 * @type { import("./types").RenderFunction }
 */
 export let render: RenderFunction;
+export type IfAny<T, Y, N> = 0 extends 1 & T ? Y : N;
 declare enum TrackOpTypes {
 	GET = "get",
 	HAS = "has",
@@ -103,6 +104,19 @@ export interface ReactiveEffectRunner<T = any> {
 	effect: ReactiveEffect;
 }
 export declare function effect<T = any>(fn: () => T, options?: ReactiveEffectOptions): ReactiveEffectRunner<T>;
+/**
+ * Registers a cleanup function for the current active effect.
+ * The cleanup function is called right before the next effect run, or when the
+ * effect is stopped.
+ *
+ * Throws a warning if there is no current active effect. The warning can be
+ * suppressed by passing `true` to the second argument.
+ *
+ * @param fn - the cleanup function to be registered
+ * @param failSilently - if `true`, will not throw warning when called without
+ * an active effect.
+ */
+export declare function onEffectCleanup(fn: () => void, failSilently?: boolean): void;
 declare const RefSymbol: unique symbol;
 declare const RawSymbol: unique symbol;
 export interface Ref<T = any, S = T> {
@@ -115,6 +129,19 @@ export interface Ref<T = any, S = T> {
 	 */
 	[RefSymbol]: true;
 }
+/**
+ * Takes an inner value and returns a reactive and mutable ref object, which
+ * has a single property `.value` that points to the inner value.
+ *
+ * @param value - The object to wrap in the ref.
+ * @see {@link https://vuejs.org/api/reactivity-core.html#ref}
+ */
+export declare function ref<T>(value: T): [
+	T
+] extends [
+	Ref
+] ? IfAny<T, Ref<T>, T> : Ref<UnwrapRef<T>, UnwrapRef<T> | T>;
+export declare function ref<T = any>(): Ref<T | undefined>;
 declare const ShallowRefMarker: unique symbol;
 export type ShallowRef<T = any, S = T> = Ref<T, S> & {
 	[ShallowRefMarker]?: true;
@@ -242,6 +269,16 @@ export class Ivysaur extends HTMLElement {
 	 * @type { (name: string) => void }
 	 */
 	remove_attribute: (name: string) => void;
+	/**
+	  * @description Add an event listener to the element.
+	  * @type { (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) => void }
+	*/
+	add_event_listener: (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) => void;
+	/**
+	  * @description Remove an event listener from the element.
+	  * @type { (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) => void }
+	*/
+	remove_event_listener: (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) => void;
 	/**
 	 * @description Called when the element is added to the dom, before rendering.
 	 */
