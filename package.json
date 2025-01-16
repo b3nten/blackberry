@@ -1,6 +1,6 @@
 {
   "name": "blackberry.js",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "A simple reactive html-based component library.",
   "type": "module",
   "scripts": {
@@ -14,13 +14,13 @@
     "@types/node": "^22.10.5",
     "dts-bundle-generator": "^9.5.1",
     "esbuild": "^0.24.2",
-    "ivysaur": "^0.0.4",
+    "ivysaur": "^0.1.0",
     "typescript": "^5.7.2"
   },
   "exports": {
     ".": {
-      "import": "./dist/blackberry@0.0.2.js",
-      "types": "./dist/blackberry@0.0.2.d.ts"
+      "import": "./dist/blackberry@0.1.0.js",
+      "types": "./dist/blackberry@0.1.0.d.ts"
     }
   }
 }
