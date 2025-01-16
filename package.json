@@ -7,11 +7,20 @@
     "dev": "./watch.sh -c 'node build src && node server'",
     "build": "node build src types"
   },
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "@types/node": "^22.10.5",
     "dts-bundle-generator": "^9.5.1",
     "esbuild": "^0.24.2",
     "ivysaur": "^0.0.2",
     "typescript": "^5.7.2"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/blackberry@0.0.1.js",
+      "types": "./dist/blackberry@0.0.1.d.ts"
+    }
   }
 }

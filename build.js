@@ -2,6 +2,8 @@ import * as dts from "dts-bundle-generator"
 import * as esbuild from "esbuild";
 import * as fs from "node:fs/promises";
 
+let args = process.argv.slice(2)
+
 const VERSION = "0.0.1"
 
 let name = (n) => `${n}@${VERSION}`
@@ -23,3 +25,16 @@ let config = (c) => ({
 
 esbuild.build(config({name: "blackberry", bundle: true}))
 esbuild.build(config({name: "blackberry.min", bundle: false}))
+
+if(args.includes("types")) {
+  let dtsFile = dts.generateDtsBundle([
+    {
+      filePath: "src/mod.d.ts",
+      libraries: {
+        inlinedLibraries: ["ivysaur"]
+      }
+    }
+  ])
+
+  fs.writeFile(`dist/${name("blackberry")}.d.ts`, dtsFile)
+}
