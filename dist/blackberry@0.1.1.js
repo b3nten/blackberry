@@ -172,9 +172,9 @@ tylesheets")}this.root_node=document.createElement("shadow-root"),this.shadowRoo
 set(i){this._reactive_states[r]=i},init(i){this._reactive_states??=w({}),this._reactive_states[r]=i}};throw new Error("I\
 nvalid decorator usage: @state only works on class accessors.")}}var Be=t=>t;function ke(t,e={}){return function(r,{kind:i,
 name:s,metadata:a}){let n=t??s,o=e.converter??Be;if(K.has(a)||K.set(a,new Set),K.get(a).add(n),i==="accessor"){let c;return{
-get(){let l=this.observed_attributes[n];return l===null?c:l===""?!0:o(l)},set(l){this.observed_attributes[n]=l,l?this.setAttribute(
+get(){let l=this.observed_attributes[n];return l==null?c:l===""?!0:o(l)},set(l){this.observed_attributes[n]=l,l?this.setAttribute(
 n,typeof l=="object"?JSON.stringify(l):typeof l===!0?"":String(l)):this.removeAttribute(n)},init(l){c=l,this.observed_attributes[n]=
-l}}}else{if(i==="getter")return function(){let c=this.observed_attributes[n];return c===null?r():c===""?!0:o(c)};throw new Error(
+l}}}else{if(i==="getter")return function(){let c=this.observed_attributes[n];return c==null?r():c===""?!0:o(c)};throw new Error(
 "Invalid decorator usage: @attribute only works on class accessors and getters.")}}}var lr=window.requestIdleCallback||(t=>setTimeout(t,0)),I=class t{static Cache=new Map;constructor(e){t.Cache.has(e)&&(this.
 call=t.Cache.get(e));let r=()=>{try{let i=new Function(["scope"],`with (scope) { return ${e}; }`);return Object.defineProperty(
 i,"name",{value:`[expression]: ${e}`}),i}catch(i){return console.log(`Error while compiling expression: ${e}`,i),()=>""}};
@@ -202,7 +202,7 @@ readyState){case"loading":case"interactive":addEventListener("DOMContentLoaded",
 Vt as ivysaur,Je as onEffectCleanup,w as reactive,Qe as ref,gt as render,Xe as setDev,Xe as set_dev,He as state};
 /*! Bundled license information:
 
-ivysaur/dist/ivysaur@0.1.0.js:
+ivysaur/dist/ivysaur@0.1.1.js:
   (*! Bundled license information:
   
   @vue/shared/dist/shared.esm-bundler.js:
