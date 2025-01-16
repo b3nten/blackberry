@@ -4,7 +4,7 @@ import * as fs from "node:fs/promises";
 
 let args = process.argv.slice(2)
 
-const VERSION = "0.1.1"
+const VERSION = "0.1.2"
 
 let name = (n) => `${n}@${VERSION}`
 
@@ -15,7 +15,7 @@ let config = (c) => ({
     {in: "src/logo.ts", out: name("logo")},
   ],
   bundle: c.bundle,
-  minify: true,
+  minify: false,
   format: "esm",
   platform: "browser",
   target: ["es2022"],
