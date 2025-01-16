@@ -5,8 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="Blackberry.js - a zero-build framework for the artisanal web">
 
-        <style> [blackberry-cloak] { display: none; } </style>
-
         <!--	Deps	-->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual defer></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,7 +37,6 @@
             src: url(https://fonts.gstatic.com/s/vt323/v17/pxiKyp0ihIEF2isfFJU.woff2) format('woff2');
             unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
             }
-
         </style>
 
         <!--	Meta	-->
@@ -52,6 +49,7 @@
         </script>
 
         <!-- 	Styles	-->
+        <style> [blackberry-cloak] { display: none; } </style>
         <style>
             :root {
                 --blackberry-dark: #1a1b26;
@@ -107,7 +105,7 @@
                 max-width: 1024px;
                 margin: 0 auto;
                 padding: 2rem;
-                background-color: var(--blackberry-main);
+                background-color: color-mix(in srgb, var(--blackberry-main), transparent 30%);
                 border: 4px solid var(--blackberry-light);
                 box-shadow: 8px 8px 0 var(--blackberry-dark);
                 position: relative;
@@ -140,7 +138,7 @@
                 text-align: center;
                 margin-bottom: 2rem;
                 @media (max-width: 550px) {
-                    font-size: 1.55rem;
+                    font-size: 2.55rem;
                 }
             }
 
@@ -154,7 +152,7 @@
                 /* border-bottom: 4px solid var(--blackberry-light); */
                 padding-bottom: 0.5rem;
                 @media (max-width: 550px) {
-                    font-size: 1.25rem;
+                    font-size: 2.2rem;
                 }
             }
 
@@ -173,6 +171,14 @@
                 font-family: sans-serif;
                 font-size: 1.125rem;
                 line-height: 140%;
+
+                @media (max-width: 768px) {
+                    font-size: 1rem;
+                }
+            }
+
+            .font-display {
+                font-family: "VT323", monospace;
             }
 
             a {
@@ -208,6 +214,11 @@
                 width: 100px;
                 height: 100px;
                 filter: drop-shadow(2px 2px 0 var(--blackberry-dark));
+
+                @media (max-width: 768px) {
+                    width: 50px;
+                    height: 50px;
+                }
             }
 
             .feature-list {
@@ -257,6 +268,25 @@
                 height: 4px;
                 width: 100%;
             }
+
+            .qatitle {
+                font-size: 1.75rem;
+                font-weight: bold;
+                margin: 1rem 0;
+            }
+
+            .panel {
+                background: var(--blackberry-light);
+                padding: 1rem;
+                margin: 1rem 0;
+                border-left: 4px solid var(--blackberry-accent);
+                font-size: 1.25rem;
+
+                @media (max-width: 768px) {
+                    padding: 0.5rem;
+                    font-size: 1rem;
+                }
+            }
         </style>
     </head>
     <body blackberry-cloak>
@@ -267,7 +297,6 @@
                 :text="`the count is ${count}`"
             ></button>
             <script>
-
                 $state.count = Number($attributes.initial ?? 0);
                 $state.increment = () => $state.count++
                 $effect(() => console.log("count changed", $state.count));
@@ -563,8 +592,8 @@
                 <img class="header-logo" src="/assets/blackberry.png" />
             </div>
 
-            <p class="text text-center">
-                A zero-build framework for the artisanal web.
+            <p class="text text-center font-display" style="font-size: 1.66rem;">
+                A zero-build html component library for the artisanal web.
             </p>
 
             <spacer-line></spacer-line>
@@ -611,8 +640,7 @@
                 </p>
             </section>
 
-            <spacer-line></spacer-line>
-
+            <!-- ##Guide -->
             <section id="section-guide">
                 <!-- ##GUIDE -->
                 <h2 class="title">Guide</h2>
@@ -624,7 +652,7 @@
                     tag for state and logic, and a <inline-code>style</inline-code> tag for styling.
                 </p>
                 <code-block language="html" content='
-                    <template blackberry="hello-world" ">
+                    <template blackberry="hello-world">
                         <h1>Hello, world!</h1>
                         <script>
                             console.log("Hello, world!")
@@ -644,11 +672,18 @@
                     Blackberry will automatically register them.
                 </p>
                 <code-block language="html" content='
-                    <script type="module">
+                    <script type="module" defer>
                         import Blackberry from "https://esm.sh/blackberry.js"
-                        Blackberry.start()
+                        Blackberry()
                     </script>
                 '></code-block>
+
+                <p>
+                    Optionally, you can put a <inline-code>blackberry-cloak</inline-code>
+                    attribute on the document body and style it so that it remains hidden until
+                    blackberry has parsed and registered all components, in which case it will
+                    remove the attribute.
+                </p>
 
                 <h3 class="title">Script Tag</h3>
                 <p class="text">
@@ -772,7 +807,7 @@
                 <code-block language="html" content='
                     <ul>
                         <template each:item="items">
-                            <li :text="item.name" :key="item.id"></span></li>
+                            <li :text="item.name" :key="item.id"></li>
                         </template>
                     </ul>
                     <script>
@@ -830,8 +865,8 @@
 
             <spacer-line></spacer-line>
 
+            <!-- ##Todo example -->
             <section id="todo-example">
-                <h2 class="title">Todo Example</h2>
                 <template blackberry="todo-component">
                     <script>
                       $state.input = { value: null }
@@ -979,6 +1014,48 @@
                     '></code-block>
                     <todo-component slot="Todos"></todo-component>
                 </tab-bar>
+            </section>
+
+            <spacer-line></spacer-line>
+
+            <!-- ##FAQ -->
+            <section>
+                <h2 class="qatitle">Why did you make this?</h2>
+                <p class="text">
+                    I wanted a way to write reusable components while authoring HTML
+                    without needing to set up a build pipeline or pull in dependencies
+                    and additional JS. I wanted something I could use to "sketch" in HTML
+                    without the cognitive overhead of switching to JS.
+                </p>
+
+                <h2 class="qatitle">How does it work?</h2>
+                <p class="text">
+                    Blackberry uses the shadow-dom to encapsulate styles and isolate components.
+                    When compiling a template, it extracts the script and style tag contents and
+                    builds a vdom structure of the template. It then uses the vdom, style, and script
+                    content to create a custom <a href="https://github.com/b3nten/ivysaur" target="_blank">ivysaur</a>
+                    component and registers it with the browser.
+                </p>
+
+                <h2 class="qatitle">Who should use this?</h2>
+                <p class="text">
+                    Anyone who wants to :) I wouldn't use this if I was building a very large or complex web application
+                    (I would use <a href="https://github.com/b3nten/ivysaur" target="_blank">ivysaur</a>), but for smaller
+                    websites that are written either in plain HTML or in a non-javascript templating language, blackberry
+                    can be a good choice. It's small size means it's reasonable to include in a project
+                    even for just a handful of components or uses.
+                </p>
+
+                <h2 class="title">Douglas Crockford on the XML of today</h2>
+                <blockquote class="panel" style="font-style: italic;">
+                    It’s probably the JavaScript frameworks. They have gotten so big and so weird.
+                    People seem to love them. I don’t understand why. The browsers have actually gotten pretty good.
+                    The web standards thing have finally worked, and the web API is stable pretty much.
+                    Some of it’s still pretty stupid, but it works and it’s reliable.
+                </blockquote>
+                <a href="https://corecursive.com/json-vs-xml-douglas-crockford/#javascript-frameworks">
+                    Read the transcript on Corecursive
+                </a>
             </section>
         </div>
     </body>
