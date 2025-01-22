@@ -1,6 +1,6 @@
 {
   "name": "blackberry.js",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A simple reactive html-based component library.",
   "type": "module",
   "scripts": {
@@ -19,8 +19,8 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/blackberry@0.1.3.js",
-      "types": "./dist/blackberry@0.1.3.d.ts"
+      "import": "./dist/blackberry@0.1.4.js",
+      "types": "./dist/blackberry@0.1.4.d.ts"
     }
   }
 }
