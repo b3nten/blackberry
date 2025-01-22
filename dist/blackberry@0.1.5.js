@@ -1,4 +1,4 @@
-// node_modules/ivysaur/dist/ivysaur@0.2.1.js
+// node_modules/ivysaur/dist/ivysaur@0.2.2.js
 // @__NO_SIDE_EFFECTS__
 function makeMap(str) {
   const map = /* @__PURE__ */ Object.create(null);
@@ -1629,12 +1629,12 @@ var h = (type, props, ...children) => typeof type === "function" ? type(props, c
   )
 );
 var render_ctx = EMPTY_OBJ2;
-var render = (vdom, node, ctx = {}) => (render.ctx = ctx, (node = patch_node(
+var render = (vdom, node, ctx = {}) => (render_ctx = ctx, (node = patch_node(
   node.parentNode,
   node,
   node.vdom || recycle_node(node),
   vdom
-)).vdom = vdom, render.ctx = EMPTY_OBJ2, node);
+)).vdom = vdom, render_ctx = EMPTY_OBJ2, node);
 Symbol.metadata ??= Symbol("metadata");
 var observed_attrs = /* @__PURE__ */ new Map();
 var global_sheets = null;
@@ -1662,15 +1662,7 @@ var Ivysaur = class extends HTMLElement {
    * @description Whether to use global document styles.
    */
   static use_global_styles = false;
-  /**
-   * @description Whether to use global document styles.
-   */
-  static get useGlobalStyles() {
-    return this.use_global_styles;
-  }
-  static set useGlobalStyles(val) {
-    this.use_global_styles = val;
-  }
+  static useGlobalStyles = false;
   /**
    * @description Whether to use light dom. This will disable component
    * styles and the render function should no longer return vnodes.
@@ -1890,7 +1882,7 @@ var Ivysaur = class extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = sheets;
     if (this.constructor.useGlobalStyles || this.constructor.use_global_styles) {
       try {
-        this.adoptedStyleSheets.push(...get_global_stylesheets());
+        this.shadowRoot.adoptedStyleSheets.push(...get_global_stylesheets());
       } catch (e) {
         this._log_error(e, "adding global stylesheets");
       }
@@ -2174,7 +2166,7 @@ export {
 };
 /*! Bundled license information:
 
-ivysaur/dist/ivysaur@0.2.1.js:
+ivysaur/dist/ivysaur@0.2.2.js:
   (*! Bundled license information:
   
   @vue/shared/dist/shared.esm-bundler.js:
