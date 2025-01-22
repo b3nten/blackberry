@@ -1,4 +1,4 @@
-// node_modules/ivysaur/dist/ivysaur@0.2.2.js
+// node_modules/ivysaur/dist/ivysaur@0.2.3.js
 // @__NO_SIDE_EFFECTS__
 function makeMap(str) {
   const map = /* @__PURE__ */ Object.create(null);
@@ -1408,10 +1408,8 @@ var patch_property = (node, key, oldValue, newValue, isSvg) => {
     if (!newValue && oldValue) node.removeEventListener(key, event_delegate);
     if (!oldValue && newValue) node.addEventListener(key, event_delegate);
     if (oldValue !== newValue) {
-      node._vevents[key] = newValue ? (e) => newValue.call(
-        render_ctx.host ?? node,
-        e
-      ) : null;
+      let host = render_ctx.host ?? node;
+      node._vevents[key] = newValue ? (e) => newValue.call(host, e) : null;
     }
   } else if (key === "ref") {
     if (typeof newValue === "function") {
@@ -2166,7 +2164,7 @@ export {
 };
 /*! Bundled license information:
 
-ivysaur/dist/ivysaur@0.2.2.js:
+ivysaur/dist/ivysaur@0.2.3.js:
   (*! Bundled license information:
   
   @vue/shared/dist/shared.esm-bundler.js:
